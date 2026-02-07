@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+
+{% block title %}Tickets - SupportSphere{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="h3 mb-2">Tickets</h1>
+        <p class="text-muted">Manage and track support tickets</p>
+    </div>
+    {% if current_user.role == 'customer' %}
+    <div>
+        <a href="{{ url_for('new_ticket') }}" class="btn btn-primary">
+            <i class="bi bi-plus-circle me-2"></i>New Ticket
+        </a>
+    </div>
+    {% endif %}
+</div>
+
+<div class="card">
+    <div class="card-body">
+        {% if tickets %}
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Subject</th>
+                        <th>Status</th>
+                        <th>Priority</th>
+                        <th>Created</th>
+                        {% if current_user.role in ['agent', 'manager'] %}
+                        <th>Customer</th>
+                        {% endif %}
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for ticket in tickets %}
+                    <tr>
+                        <td>#{{ ticket.id }}</td>
+                        <td>{{ ticket.subject or ticket.title or 'No Subject' }}</td>
+                        <td>
+                            <span class="badge bg-{% if ticket.status == 'Open' %}primary{% elif ticket.status == 'In Progress' %}warning{% elif ticket.status == 'Closed' %}success{% else %}danger{% endif %}">
+                                {{ ticket.status }}
+                            </span>
+                        </td>
+                        <td>
+                            <span class="badge bg-{% if ticket.priority == 'high' %}danger{% elif ticket.priority == 'medium' %}warning{% else %}success{% endif %}">
+                                {{ ticket.priority|capitalize }}
+                            </span>
+                        </td>
+                        <td>{{ ticket.created_at|datetimeformat }}</td>
+                        {% if current_user.role in ['agent', 'manager'] %}
+                        <td>{{ ticket.customer_name }}</td>
+                        {% endif %}
+                        <td>
+                            <a href="{{ url_for('ticket_detail', id=ticket.id) }}" class="btn btn-sm btn-outline-primary">View</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="text-center py-5">
+            <i class="bi bi-ticket-detailed display-4 text-muted mb-3"></i>
+            <h5>No tickets found</h5>
+            <p class="text-muted">No tickets available at the moment.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

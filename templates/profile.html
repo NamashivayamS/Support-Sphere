@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+
+{% block title %}Profile - SupportSphere{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="mb-0">My Profile</h4>
+            </div>
+            <div class="card-body">
+                <div class="text-center mb-4">
+                    <img src="https://ui-avatars.com/api/?name={{ current_user.name }}&background=6c757d&color=fff" 
+                         class="avatar" style="width: 80px; height: 80px;" alt="Profile Picture">
+                </div>
+                
+                <div class="mb-3">
+                    <label class="form-label">Name</label>
+                    <input type="text" class="form-control" value="{{ current_user.name }}" readonly>
+                </div>
+                
+                <div class="mb-3">
+                    <label class="form-label">Email</label>
+                    <input type="email" class="form-control" value="{{ current_user.email }}" readonly>
+                </div>
+                
+                <div class="mb-3">
+                    <label class="form-label">Role</label>
+                    <input type="text" class="form-control" value="{{ current_user.role|capitalize }}" readonly>
+                </div>
+                
+                <div class="text-center">
+                    <button class="btn btn-primary" disabled>Edit Profile (Coming Soon)</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

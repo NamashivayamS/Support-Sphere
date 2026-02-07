@@ -1,0 +1,354 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - SupportSphere{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="h3 mb-2">Dashboard</h1>
+        <p class="text-muted">Welcome back, {{ current_user.name }}! Here's your support overview.</p>
+    </div>
+    <div class="d-flex">
+        {% if current_user.role == 'customer' %}
+        <a href="{{ url_for('new_ticket') }}" class="btn btn-primary">
+            <i class="bi bi-plus-circle me-2"></i>New Ticket
+        </a>
+        {% elif current_user.role == 'agent' %}
+        <a href="{{ url_for('tickets') }}" class="btn btn-primary">
+            <i class="bi bi-ticket-detailed me-2"></i>View All Tickets
+        </a>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Stats Cards -->
+<div class="row g-4 mb-5">
+    {% if current_user.role == 'customer' %}
+    <div class="col-xl-3 col-md-6">
+        <div class="card stat-card">
+            <div class="stat-icon stat-tickets">
+                <i class="bi bi-ticket-detailed fs-4"></i>
+            </div>
+            <h5 class="mb-2">My Open Tickets</h5>
+            <div class="d-flex align-items-end">
+                <h2 class="mb-0">{{ stats.open_tickets if stats else 0 }}</h2>
+                {% if stats and stats.open_tickets_change %}
+                <span class="ms-2 mb-1 {% if stats.open_tickets_change > 0 %}text-success{% else %}text-danger{% endif %}">
+                    <i class="bi bi-arrow-{% if stats.open_tickets_change > 0 %}up{% else %}down{% endif %} me-1"></i>
+                    {{ stats.open_tickets_change|abs }}%
+                </span>
+                {% endif %}
+            </div>
+            <p class="text-muted small mt-2 mb-0">Tickets awaiting response</p>
+        </div>
+    </div>
+    
+    <div class="col-xl-3 col-md-6">
+        <div class="card stat-card">
+            <div class="stat-icon stat-sla">
+                <i class="bi bi-clock fs-4"></i>
+            </div>
+            <h5 class="mb-2">Avg Response Time</h5>
+            <div class="d-flex align-items-end">
+                <h2 class="mb-0">{{ stats.avg_response_time if stats else '0' }}</h2>
+                <span class="ms-2 mb-1 text-muted">hours</span>
+            </div>
+            <p class="text-muted small mt-2 mb-0">Time to first response</p>
+        </div>
+    </div>
+    
+    <div class="col-xl-3 col-md-6">
+        <div class="card stat-card">
+            <div class="stat-icon stat-response">
+                <i class="bi bi-chat-dots fs-4"></i>
+            </div>
+            <h5 class="mb-2">Resolved This Month</h5>
+            <h2 class="mb-2">{{ stats.resolved_month if stats else 0 }}</h2>
+            <p class="text-muted small mt-2 mb-0">Tickets resolved in current month</p>
+        </div>
+    </div>
+    
+    <div class="col-xl-3 col-md-6">
+        <div class="card stat-card">
+            <div class="stat-icon stat-agents">
+                <i class="bi bi-person-check fs-4"></i>
+            </div>
+            <h5 class="mb-2">Satisfaction Score</h5>
+            <div class="d-flex align-items-end">
+                <h2 class="mb-0">{{ stats.satisfaction_score if stats else 'N/A' }}</h2>
+                <span class="ms-2 mb-1 text-muted">/5</span>
+            </div>
+            <p class="text-muted small mt-2 mb-0">Based on recent feedback</p>
+        </div>
+    </div>
+    
+    {% elif current_user.role == 'agent' %}
+    <div class="col-xl-3 col-md-6">
+        <div class="card stat-card">
+            <div class="stat-icon stat-tickets">
+                <i class="bi bi-inbox fs-4"></i>
+            </div>
+            <h5 class="mb-2">Assigned Tickets</h5>
+            <div class="d-flex align-items-end">
+                <h2 class="mb-0">{{ stats.assigned_tickets if stats else 0 }}</h2>
+                {% if stats and stats.assigned_change %}
+                <span class="ms-2 mb-1 {% if stats.assigned_change > 0 %}text-danger{% else %}text-success{% endif %}">
+                    <i class="bi bi-arrow-{% if stats.assigned_change > 0 %}up{% else %}down{% endif %} me-1"></i>
+                    {{ stats.assigned_change|abs }}
+                </span>
+                {% endif %}
+            </div>
+            <p class="text-muted small mt-2 mb-0">Currently assigned to you</p>
+        </div>
+    </div>
+    
+    <div class="col-xl-3 col-md-6">
+        <div class="card stat-card">
+            <div class="stat-icon stat-sla">
+                <i class="bi bi-clock-history fs-4"></i>
+            </div>
+            <h5 class="mb-2">SLA Compliance</h5>
+            <div class="d-flex align-items-end">
+                <h2 class="mb-0">{{ stats.sla_compliance if stats else 0 }}%</h2>
+                {% if stats and stats.sla_change %}
+                <span class="ms-2 mb-1 {% if stats.sla_change > 0 %}text-success{% else %}text-danger{% endif %}">
+                    <i class="bi bi-arrow-{% if stats.sla_change > 0 %}up{% else %}down{% endif %} me-1"></i>
+                    {{ stats.sla_change|abs }}%
+                </span>
+                {% endif %}
+            </div>
+            <p class="text-muted small mt-2 mb-0">Meeting response deadlines</p>
+        </div>
+    </div>
+    
+    <div class="col-xl-3 col-md-6">
+        <div class="card stat-card">
+            <div class="stat-icon stat-response">
+                <i class="bi bi-check-circle fs-4"></i>
+            </div>
+            <h5 class="mb-2">Resolved This Week</h5>
+            <div class="d-flex align-items-end">
+                <h2 class="mb-0">{{ stats.resolved_week if stats else 0 }}</h2>
+                <span class="ms-2 mb-1 text-muted">tickets</span>
+            </div>
+            <p class="text-muted small mt-2 mb-0">Tickets you resolved this week</p>
+        </div>
+    </div>
+    
+    <div class="col-xl-3 col-md-6">
+        <div class="card stat-card">
+            <div class="stat-icon stat-agents">
+                <i class="bi bi-star fs-4"></i>
+            </div>
+            <h5 class="mb-2">Customer Rating</h5>
+            <div class="d-flex align-items-end">
+                <h2 class="mb-0">{{ stats.avg_rating if stats else 'N/A' }}</h2>
+                <span class="ms-2 mb-1 text-muted">/5</span>
+            </div>
+            <p class="text-muted small mt-2 mb-0">Average of your ticket ratings</p>
+        </div>
+    </div>
+    
+    {% elif current_user.role == 'manager' %}
+    <div class="col-xl-3 col-md-6">
+        <div class="card stat-card">
+            <div class="stat-icon stat-tickets">
+                <i class="bi bi-ticket-detailed fs-4"></i>
+            </div>
+            <h5 class="mb-2">Total Open Tickets</h5>
+            <div class="d-flex align-items-end">
+                <h2 class="mb-0">{{ stats.total_open if stats else 0 }}</h2>
+                {% if stats and stats.open_change %}
+                <span class="ms-2 mb-1 {% if stats.open_change > 0 %}text-danger{% else %}text-success{% endif %}">
+                    <i class="bi bi-arrow-{% if stats.open_change > 0 %}up{% else %}down{% endif %} me-1"></i>
+                    {{ stats.open_change|abs }}%
+                </span>
+                {% endif %}
+            </div>
+            <p class="text-muted small mt-2 mb-0">Across all agents</p>
+        </div>
+    </div>
+    
+    <div class="col-xl-3 col-md-6">
+        <div class="card stat-card">
+            <div class="stat-icon stat-sla">
+                <i class="bi bi-clock-history fs-4"></i>
+            </div>
+            <h5 class="mb-2">Team SLA Compliance</h5>
+            <div class="d-flex align-items-end">
+                <h2 class="mb-0">{{ stats.team_sla if stats else 0 }}%</h2>
+                {% if stats and stats.team_sla_change %}
+                <span class="ms-2 mb-1 {% if stats.team_sla_change > 0 %}text-success{% else %}text-danger{% endif %}">
+                    <i class="bi bi-arrow-{% if stats.team_sla_change > 0 %}up{% else %}down{% endif %} me-1"></i>
+                    {{ stats.team_sla_change|abs }}%
+                </span>
+                {% endif %}
+            </div>
+            <p class="text-muted small mt-2 mb-0">Team performance against SLA</p>
+        </div>
+    </div>
+    
+    <div class="col-xl-3 col-md-6">
+        <div class="card stat-card">
+            <div class="stat-icon stat-response">
+                <i class="bi bi-people fs-4"></i>
+            </div>
+            <h5 class="mb-2">Active Agents</h5>
+            <h2 class="mb-2">{{ stats.active_agents if stats else 0 }}/{{ stats.total_agents if stats else 0 }}</h2>
+            <p class="text-muted small mt-2 mb-0">Currently available</p>
+        </div>
+    </div>
+    
+    <div class="col-xl-3 col-md-6">
+        <div class="card stat-card">
+            <div class="stat-icon stat-agents">
+                <i class="bi bi-graph-up fs-4"></i>
+            </div>
+            <h5 class="mb-2">Avg Resolution Time</h5>
+            <div class="d-flex align-items-end">
+                <h2 class="mb-0">{{ stats.avg_resolution if stats else '0' }}</h2>
+                <span class="ms-2 mb-1 text-muted">hours</span>
+            </div>
+            <p class="text-muted small mt-2 mb-0">Average ticket resolution time</p>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Recent Activity / Tickets -->
+<div class="row g-4">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Recent Tickets</h5>
+                <a href="{{ url_for('tickets') }}" class="btn btn-sm btn-outline-primary">View All</a>
+            </div>
+            <div class="card-body p-0">
+                {% if recent_tickets and recent_tickets|length > 0 %}
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>Ticket ID</th>
+                                <th>Subject</th>
+                                <th>Status</th>
+                                <th>Priority</th>
+                                <th>Created</th>
+                                {% if current_user.role in ['agent', 'manager'] %}
+                                <th>Customer</th>
+                                {% endif %}
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for ticket in recent_tickets %}
+                            <tr class="priority-{{ ticket.priority }} clickable-row" data-href="{{ url_for('ticket_detail', id=ticket.id) }}">
+                                <td class="fw-medium">#{{ ticket.id }}</td>
+                                <td>{{ ticket.subject or ticket.title or 'No Subject' }}</td>
+                                <td>
+                                    <span class="badge status-badge-{{ ticket.status.replace(' ', '-').lower() }}">
+                                        {{ ticket.status }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="badge bg-{% if ticket.priority == 'high' %}danger{% elif ticket.priority == 'medium' %}warning{% else %}success{% endif %}">
+                                        {{ ticket.priority|capitalize }}
+                                    </span>
+                                </td>
+                                <td>{{ ticket.created_at|datetimeformat }}</td>
+                                {% if current_user.role in ['agent', 'manager'] %}
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <img src="https://ui-avatars.com/api/?name={{ ticket.customer_name }}&background=6c757d&color=fff" 
+                                             class="avatar-sm me-2" alt="{{ ticket.customer_name }}">
+                                        {{ ticket.customer_name }}
+                                    </div>
+                                </td>
+                                {% endif %}
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-5">
+                    <i class="bi bi-ticket-detailed display-4 text-muted mb-3"></i>
+                    <h5>No tickets found</h5>
+                    <p class="text-muted">You don't have any tickets yet.</p>
+                    {% if current_user.role == 'customer' %}
+                    <a href="{{ url_for('new_ticket') }}" class="btn btn-primary">Create Your First Ticket</a>
+                    {% endif %}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <!-- Side Panel -->
+    <div class="col-lg-4">
+        <!-- SLA Status -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">SLA Status</h5>
+            </div>
+            <div class="card-body">
+                {% if sla_status %}
+                    {% for sla in sla_status %}
+                    {% set sla_class = 'good' if sla.compliance >= 90 else 'warning' if sla.compliance >= 70 else 'critical' %}
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between mb-1">
+                            <span class="fw-medium">{{ sla.name }}</span>
+                            <span class="fw-medium">{{ sla.compliance }}%</span>
+                        </div>
+                        <div class="sla-indicator">
+                            <div class="sla-progress sla-{{ sla_class }}" 
+                                 data-compliance="{{ sla.compliance }}"></div>
+                        </div>
+                        <small class="text-muted">{{ sla.description }}</small>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                <div class="text-center py-3">
+                    <p class="text-muted">No SLA data available</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Quick Actions -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Quick Actions</h5>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    {% if current_user.role == 'customer' %}
+                    <a href="{{ url_for('new_ticket') }}" class="btn btn-outline-primary text-start">
+                        <i class="bi bi-plus-circle me-2"></i>Create New Ticket
+                    </a>
+                    <a href="{{ url_for('knowledge_base') }}" class="btn btn-outline-secondary text-start">
+                        <i class="bi bi-journal-bookmark-fill me-2"></i>Browse Knowledge Base
+                    </a>
+                    {% elif current_user.role == 'agent' %}
+                    <a href="{{ url_for('tickets', filter='assigned') }}" class="btn btn-outline-primary text-start">
+                        <i class="bi bi-inbox me-2"></i>View Assigned Tickets
+                    </a>
+                    <a href="{{ url_for('tickets', filter='unassigned') }}" class="btn btn-outline-secondary text-start">
+                        <i class="bi bi-inbox-fill me-2"></i>Pick Unassigned Tickets
+                    </a>
+                    {% elif current_user.role == 'manager' %}
+                    <a href="{{ url_for('reports') }}" class="btn btn-outline-primary text-start">
+                        <i class="bi bi-bar-chart-line me-2"></i>View Reports
+                    </a>
+                    <a href="{{ url_for('agents') }}" class="btn btn-outline-secondary text-start">
+                        <i class="bi bi-people-fill me-2"></i>Manage Agents
+                    </a>
+                    {% endif %}
+                    <a href="{{ url_for('help') }}" class="btn btn-outline-info text-start">
+                        <i class="bi bi-question-circle me-2"></i>Help Center
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
