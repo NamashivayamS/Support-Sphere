@@ -245,7 +245,7 @@
                                 <td class="fw-medium">#{{ ticket.id }}</td>
                                 <td>{{ ticket.subject or ticket.title or 'No Subject' }}</td>
                                 <td>
-                                    <span class="badge status-badge-{{ ticket.status.replace(' ', '-').lower() }}">
+                                    <span class="badge bg-{% if ticket.status == 'Open' %}warning text-dark{% elif ticket.status == 'In Progress' %}primary{% elif ticket.status == 'Closed' %}success{% else %}danger{% endif %}">
                                         {{ ticket.status }}
                                     </span>
                                 </td>

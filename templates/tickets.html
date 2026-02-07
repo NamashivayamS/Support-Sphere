@@ -41,12 +41,14 @@
                         <td>#{{ ticket.id }}</td>
                         <td>{{ ticket.subject or ticket.title or 'No Subject' }}</td>
                         <td>
-                            <span class="badge bg-{% if ticket.status == 'Open' %}primary{% elif ticket.status == 'In Progress' %}warning{% elif ticket.status == 'Closed' %}success{% else %}danger{% endif %}">
+                            <span
+                                class="badge bg-{% if ticket.status == 'Open' %}warning text-dark{% elif ticket.status == 'In Progress' %}primary{% elif ticket.status == 'Closed' %}success{% else %}danger{% endif %}">
                                 {{ ticket.status }}
                             </span>
                         </td>
                         <td>
-                            <span class="badge bg-{% if ticket.priority == 'high' %}danger{% elif ticket.priority == 'medium' %}warning{% else %}success{% endif %}">
+                            <span
+                                class="badge bg-{% if ticket.priority == 'high' %}danger{% elif ticket.priority == 'medium' %}warning{% else %}success{% endif %}">
                                 {{ ticket.priority|capitalize }}
                             </span>
                         </td>
@@ -55,7 +57,8 @@
                         <td>{{ ticket.customer_name }}</td>
                         {% endif %}
                         <td>
-                            <a href="{{ url_for('ticket_detail', id=ticket.id) }}" class="btn btn-sm btn-outline-primary">View</a>
+                            <a href="{{ url_for('ticket_detail', id=ticket.id) }}"
+                                class="btn btn-sm btn-outline-primary">View</a>
                         </td>
                     </tr>
                     {% endfor %}
