@@ -1,0 +1,404 @@
+{% extends "base.html" %}
+
+{% block title %}SupportSphere - Project & Team Management{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<div class="container-fluid bg-gradient-primary py-6">
+    <div class="container py-5">
+        <div class="row align-items-center min-vh-75">
+            <div class="col-lg-6 mb-5 mb-lg-0">
+                <div class="mb-4">
+                    <span class="badge bg-primary bg-opacity-10 text-primary px-3 py-2 mb-3">
+                        <i class="bi bi-stars me-2"></i>Project & Team Management SaaS
+                    </span>
+                    <h1 class="display-4 fw-bold mb-3">
+                        Streamline Your<br>Projects with <span class="text-primary">SupportSphere</span>
+                    </h1>
+                    <p class="lead text-muted mb-4">
+                        Complete project management solution for customers, managers, and team members.
+                        Collaborate seamlessly, track progress in real-time, and deliver on time.
+                    </p>
+                </div>
+                
+                <div class="d-flex flex-wrap gap-3">
+                    <a href="{{ url_for('auth.register') }}" class="btn btn-primary btn-lg px-5">
+                        <i class="bi bi-rocket me-2"></i>Get Started Free
+                    </a>
+                    <a href="#how-it-works" class="btn btn-outline-secondary btn-lg px-5">
+                        <i class="bi bi-play-circle me-2"></i>See How It Works
+                    </a>
+                </div>
+                
+                <div class="mt-5 d-flex align-items-center gap-4">
+                    <div class="d-flex align-items-center">
+                        <div class="avatar-group">
+                            <img src="https://ui-avatars.com/api/?name=Customer&background=0d6efd&color=fff&size=40" 
+                                 class="avatar-sm border border-2 border-white rounded-circle" alt="Customer">
+                            <img src="https://ui-avatars.com/api/?name=Manager&background=198754&color=fff&size=40" 
+                                 class="avatar-sm border border-2 border-white rounded-circle ms-n2" alt="Manager">
+                            <img src="https://ui-avatars.com/api/?name=Team&background=6c757d&color=fff&size=40" 
+                                 class="avatar-sm border border-2 border-white rounded-circle ms-n2" alt="Team">
+                        </div>
+                        <span class="text-muted ms-2"><strong>500+</strong> active teams</span>
+                    </div>
+                    <div class="vr"></div>
+                    <span class="text-muted">
+                        <i class="bi bi-star-fill text-warning me-1"></i>4.9/5 rating
+                    </span>
+                </div>
+            </div>
+            
+            <div class="col-lg-6">
+                <div class="position-relative">
+                    <div class="card border-0 shadow-lg">
+                        <div class="card-body p-4">
+                            <div class="d-flex align-items-center mb-4">
+                                <div class="bg-primary bg-opacity-10 p-3 rounded-circle">
+                                    <i class="bi bi-kanban fs-2 text-primary"></i>
+                                </div>
+                                <div class="ms-3">
+                                    <h5 class="mb-1 fw-bold">Complete Project Suite</h5>
+                                    <p class="text-muted mb-0">All-in-one project management</p>
+                                </div>
+                            </div>
+                            
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <div class="d-flex align-items-center">
+                                        <i class="bi bi-check-circle-fill text-success me-2"></i>
+                                        <span>Task Assignment</span>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="d-flex align-items-center">
+                                        <i class="bi bi-check-circle-fill text-success me-2"></i>
+                                        <span>Progress Tracking</span>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="d-flex align-items-center">
+                                        <i class="bi bi-check-circle-fill text-success me-2"></i>
+                                        <span>Team Collaboration</span>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="d-flex align-items-center">
+                                        <i class="bi bi-check-circle-fill text-success me-2"></i>
+                                        <span>Client Communication</span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <hr class="my-4">
+                            
+                            <div class="d-flex justify-content-between">
+                                <div class="text-center">
+                                    <h3 class="h2 fw-bold text-primary mb-0">98%</h3>
+                                    <span class="text-muted small">On-time delivery</span>
+                                </div>
+                                <div class="text-center">
+                                    <h3 class="h2 fw-bold text-primary mb-0">24/7</h3>
+                                    <span class="text-muted small">Support</span>
+                                </div>
+                                <div class="text-center">
+                                    <h3 class="h2 fw-bold text-primary mb-0">100%</h3>
+                                    <span class="text-muted small">Transparency</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- How It Works Section -->
+<div id="how-it-works" class="container py-6">
+    <div class="text-center mb-5">
+        <span class="badge bg-primary bg-opacity-10 text-primary px-3 py-2 mb-3">
+            <i class="bi bi-people me-2"></i>System Roles
+        </span>
+        <h2 class="display-5 fw-bold mb-3">How SupportSphere Works</h2>
+        <p class="lead text-muted mx-auto" style="max-width: 700px;">
+            Three powerful roles working together seamlessly to deliver successful projects
+        </p>
+    </div>
+    
+    <div class="row g-4">
+        <!-- Customer Role -->
+        <div class="col-lg-4">
+            <div class="card h-100 border-0 shadow-sm hover-lift">
+                <div class="card-body text-center p-4">
+                    <div class="bg-primary bg-opacity-10 p-4 rounded-circle d-inline-block mb-4">
+                        <i class="bi bi-person-badge fs-1 text-primary"></i>
+                    </div>
+                    <h3 class="h4 fw-bold mb-3">Customer</h3>
+                    <p class="text-muted mb-4">
+                        Submit project requests, track progress in real-time, and communicate directly with managers.
+                        Stay informed with visual progress indicators.
+                    </p>
+                    <div class="text-start bg-light p-3 rounded">
+                        <div class="d-flex align-items-center mb-2">
+                            <i class="bi bi-check-circle-fill text-success me-2"></i>
+                            <span>Create projects</span>
+                        </div>
+                        <div class="d-flex align-items-center mb-2">
+                            <i class="bi bi-check-circle-fill text-success me-2"></i>
+                            <span>Monitor progress</span>
+                        </div>
+                        <div class="d-flex align-items-center">
+                            <i class="bi bi-check-circle-fill text-success me-2"></i>
+                            <span>Chat with manager</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Manager Role -->
+        <div class="col-lg-4">
+            <div class="card h-100 border-0 shadow-sm border-primary border-2 hover-lift">
+                <div class="card-body text-center p-4">
+                    <div class="bg-success bg-opacity-10 p-4 rounded-circle d-inline-block mb-4">
+                        <i class="bi bi-person-workspace fs-1 text-success"></i>
+                    </div>
+                    <span class="badge bg-success mb-3">Core Role</span>
+                    <h3 class="h4 fw-bold mb-3">Manager</h3>
+                    <p class="text-muted mb-4">
+                        Oversee all projects, assign team members, create and assign tasks, 
+                        track progress, and ensure successful delivery.
+                    </p>
+                    <div class="text-start bg-light p-3 rounded">
+                        <div class="d-flex align-items-center mb-2">
+                            <i class="bi bi-check-circle-fill text-success me-2"></i>
+                            <span>View all projects</span>
+                        </div>
+                        <div class="d-flex align-items-center mb-2">
+                            <i class="bi bi-check-circle-fill text-success me-2"></i>
+                            <span>Assign teams & tasks</span>
+                        </div>
+                        <div class="d-flex align-items-center">
+                            <i class="bi bi-check-circle-fill text-success me-2"></i>
+                            <span>Customer & team chat</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Team Member Role -->
+        <div class="col-lg-4">
+            <div class="card h-100 border-0 shadow-sm hover-lift">
+                <div class="card-body text-center p-4">
+                    <div class="bg-info bg-opacity-10 p-4 rounded-circle d-inline-block mb-4">
+                        <i class="bi bi-people fs-1 text-info"></i>
+                    </div>
+                    <h3 class="h4 fw-bold mb-3">Team Member</h3>
+                    <p class="text-muted mb-4">
+                        Execute assigned tasks, update progress with visual slider, 
+                        add comments, and collaborate with managers.
+                    </p>
+                    <div class="text-start bg-light p-3 rounded">
+                        <div class="d-flex align-items-center mb-2">
+                            <i class="bi bi-check-circle-fill text-success me-2"></i>
+                            <span>View assigned tasks</span>
+                        </div>
+                        <div class="d-flex align-items-center mb-2">
+                            <i class="bi bi-check-circle-fill text-success me-2"></i>
+                            <span>Update progress</span>
+                        </div>
+                        <div class="d-flex align-items-center">
+                            <i class="bi bi-check-circle-fill text-success me-2"></i>
+                            <span>Add notes & comments</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Interaction Flow -->
+    <div class="row mt-5">
+        <div class="col-12">
+            <div class="card border-0 bg-primary bg-opacity-10">
+                <div class="card-body p-4">
+                    <div class="row align-items-center">
+                        <div class="col-lg-8">
+                            <h4 class="fw-bold mb-2">Seamless Collaboration Flow</h4>
+                            <p class="mb-0">
+                                <span class="badge bg-primary me-2">Customer</span> 
+                                <i class="bi bi-arrow-right mx-2"></i>
+                                <span class="badge bg-success me-2">Manager</span>
+                                <i class="bi bi-arrow-right mx-2"></i>
+                                <span class="badge bg-info me-2">Team</span>
+                                <i class="bi bi-arrow-right mx-2"></i>
+                                <span class="badge bg-primary">Delivery</span>
+                            </p>
+                            <p class="text-muted mt-3 mb-0">
+                                Project Request → Review → Team Assignment → Task Creation → 
+                                Progress Updates → Customer Communication → Successful Delivery
+                            </p>
+                        </div>
+                        <div class="col-lg-4 text-lg-end mt-3 mt-lg-0">
+                            <a href="{{ url_for('auth.register') }}" class="btn btn-primary px-4">
+                                <i class="bi bi-rocket me-2"></i>Start Your Project
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Features Section -->
+<div class="container py-6">
+    <div class="row align-items-center">
+        <div class="col-lg-6 mb-5 mb-lg-0">
+            <span class="badge bg-warning bg-opacity-10 text-warning px-3 py-2 mb-3">
+                <i class="bi bi-stars me-2"></i>Key Features
+            </span>
+            <h2 class="display-6 fw-bold mb-4">Everything you need to manage projects efficiently</h2>
+            <p class="text-muted mb-4">
+                From project initiation to delivery, SupportSphere provides all the tools you need
+                for successful project management in one integrated platform.
+            </p>
+            
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <div class="d-flex">
+                        <div class="feature-icon bg-primary bg-opacity-10 p-2 rounded-circle me-3">
+                            <i class="bi bi-folder-plus text-primary"></i>
+                        </div>
+                        <div>
+                            <h6 class="fw-bold mb-1">Project Creation</h6>
+                            <small class="text-muted">Submit projects with complexity & deadlines</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="d-flex">
+                        <div class="feature-icon bg-success bg-opacity-10 p-2 rounded-circle me-3">
+                            <i class="bi bi-people text-success"></i>
+                        </div>
+                        <div>
+                            <h6 class="fw-bold mb-1">Team Assignment</h6>
+                            <small class="text-muted">Assign members with specific roles</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="d-flex">
+                        <div class="feature-icon bg-info bg-opacity-10 p-2 rounded-circle me-3">
+                            <i class="bi bi-graph-up text-info"></i>
+                        </div>
+                        <div>
+                            <h6 class="fw-bold mb-1">Progress Tracking</h6>
+                            <small class="text-muted">Real-time progress bars & updates</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="d-flex">
+                        <div class="feature-icon bg-warning bg-opacity-10 p-2 rounded-circle me-3">
+                            <i class="bi bi-chat-dots text-warning"></i>
+                        </div>
+                        <div>
+                            <h6 class="fw-bold mb-1">Integrated Chat</h6>
+                            <small class="text-muted">Direct communication channels</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-6">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body p-4">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h5 class="fw-bold mb-0">
+                            <i class="bi bi-award text-primary me-2"></i>
+                            Trusted by Industry Leaders
+                        </h5>
+                        <span class="badge bg-primary">2024</span>
+                    </div>
+                    
+                    <div class="vstack gap-3">
+                        <div class="d-flex align-items-center p-3 bg-light rounded">
+                            <i class="bi bi-check-circle-fill text-success fs-5 me-3"></i>
+                            <div>
+                                <strong>TechCorp Inc.</strong>
+                                <p class="text-muted mb-0 small">45-day project delivered 12% under budget</p>
+                            </div>
+                        </div>
+                        <div class="d-flex align-items-center p-3 bg-light rounded">
+                            <i class="bi bi-check-circle-fill text-success fs-5 me-3"></i>
+                            <div>
+                                <strong>StartupX</strong>
+                                <p class="text-muted mb-0 small">MVP delivered in 3 weeks with 5 team members</p>
+                            </div>
+                        </div>
+                        <div class="d-flex align-items-center p-3 bg-light rounded">
+                            <i class="bi bi-check-circle-fill text-success fs-5 me-3"></i>
+                            <div>
+                                <strong>Global Solutions</strong>
+                                <p class="text-muted mb-0 small">Enterprise migration completed ahead of schedule</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- CTA Section -->
+<div class="container-fluid bg-primary bg-gradient py-6">
+    <div class="container py-5">
+        <div class="row justify-content-center text-center">
+            <div class="col-lg-8">
+                <h2 class="display-6 fw-bold text-white mb-4">Ready to transform your project management?</h2>
+                <p class="text-white mb-4 opacity-90 fs-5">
+                    Join 500+ teams already using SupportSphere to deliver successful projects on time.
+                </p>
+                <div class="d-flex justify-content-center gap-3">
+                    <a href="{{ url_for('auth.register') }}" class="btn btn-light btn-lg px-5">
+                        <i class="bi bi-person-plus me-2"></i>Sign Up Free
+                    </a>
+                    <a href="#how-it-works" class="btn btn-outline-light btn-lg px-5">
+                        <i class="bi bi-play-circle me-2"></i>See Demo
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .py-6 { padding-top: 5rem; padding-bottom: 5rem; }
+    .min-vh-75 { min-height: 75vh; }
+    .ms-n2 { margin-left: -0.5rem; }
+    .avatar-group { display: flex; align-items: center; }
+    .avatar-sm { width: 40px; height: 40px; object-fit: cover; }
+    .hover-lift {
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .hover-lift:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 1rem 2rem rgba(0,0,0,0.1) !important;
+    }
+    .feature-icon {
+        width: 40px;
+        height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .bg-gradient-primary {
+        background: linear-gradient(135deg, #f8faff 0%, #ffffff 100%);
+    }
+    .opacity-90 { opacity: 0.9; }
+</style>
+{% endblock %}

@@ -1,0 +1,149 @@
+<!-- Reusable Progress Display Component -->
+<div class="project-progress mb-4">
+    <div class="d-flex justify-content-between align-items-center mb-2">
+        <span class="fw-medium">Overall Project Progress</span>
+        <span class="h5 mb-0 fw-bold text-primary">{{ project.progress }}%</span>
+    </div>
+    
+    <!-- Main Progress Bar -->
+    <div class="progress mb-3" style="height: 12px;">
+        <div class="progress-bar bg-{% if project.progress >= 75 %}success
+                                    {% elif project.progress >= 40 %}primary
+                                    {% elif project.progress >= 15 %}warning
+                                    {% else %}danger{% endif %}"
+             role="progressbar"
+             style="width: {{ project.progress }}%;"
+             aria-valuenow="{{ project.progress }}"
+             aria-valuemin="0"
+             aria-valuemax="100">
+        </div>
+    </div>
+    
+    <!-- Progress Breakdown -->
+    <div class="row g-2 mt-3">
+        <div class="col-md-4">
+            <div class="card border-0 bg-light">
+                <div class="card-body p-3">
+                    <small class="text-muted d-block">Completed</small>
+                    <span class="h5 mb-0 fw-bold text-success">{{ project.completed_tasks }}</span>
+                    <small class="text-muted">/ {{ project.total_tasks }} tasks</small>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card border-0 bg-light">
+                <div class="card-body p-3">
+                    <small class="text-muted d-block">In Progress</small>
+                    <span class="h5 mb-0 fw-bold text-primary">{{ project.in_progress_tasks }}</span>
+                    <small class="text-muted">tasks</small>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card border-0 bg-light">
+                <div class="card-body p-3">
+                    <small class="text-muted d-block">Pending</small>
+                    <span class="h5 mb-0 fw-bold text-warning">{{ project.pending_tasks }}</span>
+                    <small class="text-muted">tasks</small>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Milestone Progress -->
+    {% if project.milestones %}
+    <div class="mt-4">
+        <h6 class="fw-medium mb-3">
+            <i class="bi bi-flag me-2"></i>Milestone Progress
+        </h6>
+        {% for milestone in project.milestones %}
+        <div class="mb-3">
+            <div class="d-flex justify-content-between mb-1">
+                <span class="small">{{ milestone.name }}</span>
+                <span class="small fw-medium">{{ milestone.progress }}%</span>
+            </div>
+            <div class="progress" style="height: 6px;">
+                <div class="progress-bar bg-info" 
+                     style="width: {{ milestone.progress }}%;"></div>
+            </div>
+        </div>
+        {% endfor %}    
+    </div>
+    {% endif %}
+    
+    <!-- Timeline Indicator -->
+    <div class="mt-4 pt-3 border-top">
+        <div class="d-flex align-items-center">
+            <i class="bi bi-calendar-check text-primary me-2"></i>
+            <div class="flex-grow-1">
+                <div class="d-flex justify-content-between mb-1">
+                    <span class="small">Project Timeline</span>
+                    <span class="small fw-medium">{{ project.days_remaining }} days remaining</span>
+                </div>
+                <div class="progress" style="height: 6px;">
+                    {% set timeline_progress = ((project.deadline - now()).days / (project.created_at - now()).days * 100)|abs %}
+                    <div class="progress-bar bg-secondary" 
+                         style="width: {{ timeline_progress }}%;"></div>
+                </div>
+                <div class="d-flex justify-content-between mt-1">
+                    <small class="text-muted">{{ project.created_at|dateformat }}</small>
+                    <small class="text-muted">{{ project.deadline|dateformat }}</small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Team Member View - Task Progress Update -->
+<div class="task-progress-update">
+    <h6 class="fw-medium mb-3">
+        <i class="bi bi-arrow-up-circle me-2"></i>Update Task Progress
+    </h6>
+    
+    <div class="mb-3">
+        <label class="form-label">Task: <span class="fw-medium">{{ task.title }}</span></label>
+        <div class="d-flex align-items-center">
+            <span class="me-3 small">{{ task.progress }}%</span>
+            <div class="flex-grow-1">
+                <input type="range" class="form-range" min="0" max="100" step="5" 
+                       value="{{ task.progress }}" id="progressRange">
+            </div>
+            <span class="ms-3 fw-bold text-primary" id="progressValue">0%</span>
+        </div>
+    </div>
+    
+    <div class="mb-3">
+        <label class="form-label">Status Update (Optional)</label>
+        <textarea class="form-control" rows="2" 
+                  placeholder="What's the latest on this task?"></textarea>
+    </div>
+    
+    <div class="form-check mb-3">
+        <input class="form-check-input" type="checkbox" id="notifyManager">
+        <label class="form-check-label" for="notifyManager">
+            Notify manager of this update
+        </label>
+    </div>
+    
+    <button class="btn btn-primary w-100">
+        <i class="bi bi-check-circle me-2"></i>Update Progress
+    </button>
+</div>
+
+<script>
+    // Live progress value display
+    document.addEventListener('DOMContentLoaded', function() {
+        var range = document.getElementById('progressRange');
+        var value = document.getElementById('progressValue');
+        
+        if (range && value) {
+            value.textContent = range.value + '%';
+            
+            range.addEventListener('input', function() {
+                value.textContent = this.value + '%';
+            });
+        }
+    });
+</script>

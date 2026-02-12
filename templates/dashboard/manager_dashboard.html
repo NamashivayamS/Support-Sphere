@@ -1,0 +1,656 @@
+{% extends "base.html" %}
+
+{% block title %}Manager Dashboard - SupportSphere{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4 py-4">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h2 fw-bold mb-2">
+                <i class="bi bi-kanban text-primary me-2"></i>Project Management Hub
+            </h1>
+            <p class="text-muted mb-0">Welcome back, <span class="fw-semibold">{{ current_user.name }}</span>! Here's your project overview.</p>
+        </div>
+        <div class="d-flex gap-3">
+            <div class="dropdown">
+                <button class="btn btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown">
+                    <i class="bi bi-funnel me-2"></i>Filter
+                </button>
+                <ul class="dropdown-menu shadow-sm">
+                    <li><a class="dropdown-item" href="#">All Projects</a></li>
+                    <li><a class="dropdown-item" href="#">In Progress</a></li>
+                    <li><a class="dropdown-item" href="#">Pending</a></li>
+                    <li><a class="dropdown-item" href="#">Completed</a></li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li><a class="dropdown-item" href="#">High Priority</a></li>
+                </ul>
+            </div>
+            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createProjectModal">
+                <i class="bi bi-plus-circle me-2"></i>New Project
+            </button>
+        </div>
+    </div>
+    
+    <!-- Quick Stats Cards -->
+    <div class="row g-3 mb-4">
+        <div class="col-xl-3 col-md-6">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0 bg-primary bg-opacity-10 p-3 rounded-circle">
+                            <i class="bi bi-kanban fs-4 text-primary"></i>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h6 class="text-muted mb-1">Total Projects</h6>
+                            <h2 class="mb-0 fw-bold">{{ stats.total_projects|default(24) }}</h2>
+                            <small class="text-success">
+                                <i class="bi bi-arrow-up me-1"></i>+3 this week
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-xl-3 col-md-6">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0 bg-success bg-opacity-10 p-3 rounded-circle">
+                            <i class="bi bi-play-circle fs-4 text-success"></i>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h6 class="text-muted mb-1">In Progress</h6>
+                            <h2 class="mb-0 fw-bold">{{ stats.in_progress|default(16) }}</h2>
+                            <small class="text-warning">
+                                <i class="bi bi-exclamation-circle me-1"></i>3 at risk
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-xl-3 col-md-6">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0 bg-warning bg-opacity-10 p-3 rounded-circle">
+                            <i class="bi bi-clock-history fs-4 text-warning"></i>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h6 class="text-muted mb-1">Pending Review</h6>
+                            <h2 class="mb-0 fw-bold">{{ stats.pending|default(5) }}</h2>
+                            <small class="text-muted">Awaiting assignment</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-xl-3 col-md-6">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0 bg-info bg-opacity-10 p-3 rounded-circle">
+                            <i class="bi bi-check-circle fs-4 text-info"></i>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h6 class="text-muted mb-1">Team Members</h6>
+                            <h2 class="mb-0 fw-bold">{{ stats.team_count|default(12) }}</h2>
+                            <small class="text-success">8 active</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Projects Table -->
+    <div class="card border-0 shadow-sm">
+        <div class="card-header bg-white border-bottom py-3">
+            <div class="d-flex justify-content-between align-items-center">
+                <h5 class="mb-0 fw-semibold">
+                    <i class="bi bi-table me-2"></i>All Projects
+                </h5>
+                <div class="d-flex align-items-center">
+                    <span class="badge bg-light text-dark me-3">{{ projects|length|default(24) }} total</span>
+                    <div class="input-group input-group-sm" style="width: 250px;">
+                        <span class="input-group-text bg-light border-0">
+                            <i class="bi bi-search"></i>
+                        </span>
+                        <input type="text" class="form-control border-0 bg-light" placeholder="Search projects...">
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="bg-light">
+                        <tr>
+                            <th class="ps-4 py-3" width="25%">Project Name</th>
+                            <th class="py-3" width="15%">Assigned Team</th>
+                            <th class="py-3" width="12%">Deadline</th>
+                            <th class="py-3" width="18%">Progress</th>
+                            <th class="py-3" width="10%">Status</th>
+                            <th class="py-3" width="10%">Complexity</th>
+                            <th class="py-3 text-end pe-4" width="10%">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for project in projects %}
+                        <tr class="project-row" data-project-id="{{ project.id }}">
+                            <td class="ps-4">
+                                <div class="d-flex align-items-center">
+                                    <div class="me-3">
+                                        <div class="bg-primary bg-opacity-10 p-2 rounded">
+                                            <i class="bi bi-folder-fill text-primary"></i>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <h6 class="mb-0 fw-semibold">{{ project.title }}</h6>
+                                        <small class="text-muted">ID: #{{ project.id }}</small>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                {% if project.team_members %}
+                                <div class="d-flex align-items-center">
+                                    <div class="avatar-group">
+                                        {% for team_member in project.team_members[:3] %}
+                                        <img src="https://ui-avatars.com/api/?name={{ team_member.member.name|urlencode }}&background=0d6efd&color=fff&size=32" 
+                                             class="avatar-xs rounded-circle border border-2 border-white" 
+                                             alt="{{ team_member.member.name }}"
+                                             data-bs-toggle="tooltip" 
+                                             title="{{ team_member.member.name }}">
+                                        {% endfor %}
+                                        {% if project.team_members|length > 3 %}
+                                        <span class="avatar-xs bg-light rounded-circle border border-2 border-white d-flex align-items-center justify-content-center ms-n1">
+                                            +{{ project.team_members|length - 3 }}
+                                        </span>
+                                        {% endif %}
+                                    </div>
+                                    <span class="ms-2 small text-muted">{{ project.team_members|length }} members</span>
+                                </div>
+                                {% else %}
+                                <span class="badge bg-warning bg-opacity-10 text-warning px-3 py-2">
+                                    <i class="bi bi-exclamation-circle me-1"></i>Unassigned
+                                </span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="d-flex flex-column">
+                                    <span class="fw-medium">{{ project.deadline|dateformat }}</span>
+                                    <small class="text-{{ 'danger' if project.days_remaining < 7 else 'warning' if project.days_remaining < 14 else 'success' }}">
+                                        <i class="bi bi-clock me-1"></i>{{ project.days_remaining }} days left
+                                    </small>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="d-flex flex-column">
+                                    <div class="d-flex justify-content-between mb-1">
+                                        <small class="text-muted">Progress</small>
+                                        <small class="fw-semibold">{{ project.progress }}%</small>
+                                    </div>
+                                    <div class="progress" style="height: 8px;">
+                                        <div class="progress-bar bg-{{ 'success' if project.progress >= 75 else 'primary' if project.progress >= 40 else 'warning' }}" 
+                                             style="width: {{ project.progress }}%"
+                                             role="progressbar"
+                                             aria-valuenow="{{ project.progress }}" 
+                                             aria-valuemin="0" 
+                                             aria-valuemax="100">
+                                        </div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                {% if project.status == 'Completed' %}
+                                <span class="badge bg-success px-3 py-2">
+                                    <i class="bi bi-check-circle me-1"></i>Completed
+                                </span>
+                                {% elif project.status == 'In Progress' %}
+                                <span class="badge bg-primary px-3 py-2">
+                                    <i class="bi bi-play-circle me-1"></i>In Progress
+                                </span>
+                                {% elif project.status == 'Pending' %}
+                                <span class="badge bg-warning px-3 py-2">
+                                    <i class="bi bi-clock me-1"></i>Pending
+                                </span>
+                                {% elif project.status == 'On Hold' %}
+                                <span class="badge bg-secondary px-3 py-2">
+                                    <i class="bi bi-pause-circle me-1"></i>On Hold
+                                </span>
+                                {% else %}
+                                <span class="badge bg-danger px-3 py-2">
+                                    <i class="bi bi-exclamation-triangle me-1"></i>At Risk
+                                </span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if project.complexity == 'High' %}
+                                <span class="badge bg-danger px-3 py-2">High</span>
+                                {% elif project.complexity == 'Medium' %}
+                                <span class="badge bg-warning px-3 py-2">Medium</span>
+                                {% else %}
+                                <span class="badge bg-success px-3 py-2">Low</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-end pe-4">
+                                <div class="d-flex justify-content-end gap-2">
+                                    <a href="{{ url_for('manager.project_detail', project_id=project.id) }}" 
+                                       class="btn btn-sm btn-outline-primary">
+                                        <i class="bi bi-eye me-1"></i>View
+                                    </a>
+                                    <button class="btn btn-sm btn-outline-success" 
+                                            onclick="openAssignTeamModal({{ project.id }}, '{{ project.title }}')"
+                                            data-bs-toggle="modal" 
+                                            data-bs-target="#assignTeamModal">
+                                        <i class="bi bi-people me-1"></i>Team
+                                    </button>
+                                    <button class="btn btn-sm btn-outline-info" 
+                                            onclick="openCreateTaskModal({{ project.id }}, '{{ project.title }}')"
+                                            data-bs-toggle="modal" 
+                                            data-bs-target="#createTaskModal">
+                                        <i class="bi bi-plus-circle me-1"></i>Task
+                                    </button>
+                                    <div class="dropdown d-inline-block">
+                                        <button class="btn btn-sm btn-outline-secondary" data-bs-toggle="dropdown">
+                                            <i class="bi bi-three-dots-vertical"></i>
+                                        </button>
+                                        <ul class="dropdown-menu dropdown-menu-end shadow-sm">
+                                            <li>
+                                                <a class="dropdown-item" href="{{ url_for('manager.project_detail', project_id=project.id) }}">
+                                                    <i class="bi bi-info-circle me-2"></i>Details
+                                                </a>
+                                            </li>
+                                            <li>
+                                                <a class="dropdown-item" href="{{ url_for('chat.project_chat', project_id=project.id) }}">
+                                                    <i class="bi bi-chat-dots me-2"></i>Open Chat
+                                                </a>
+                                            </li>
+                                            <li>
+                                                <a class="dropdown-item" href="#">
+                                                    <i class="bi bi-pencil me-2"></i>Edit
+                                                </a>
+                                            </li>
+                                            <li><hr class="dropdown-divider"></li>
+                                            <li>
+                                                <a class="dropdown-item text-danger" href="#">
+                                                    <i class="bi bi-archive me-2"></i>Archive
+                                                </a>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="7" class="text-center py-5">
+                                <div class="py-4">
+                                    <i class="bi bi-folder display-1 text-muted opacity-25 mb-3"></i>
+                                    <h4 class="text-muted mb-2">No projects found</h4>
+                                    <p class="text-muted mb-3">Get started by creating your first project</p>
+                                    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createProjectModal">
+                                        <i class="bi bi-plus-circle me-2"></i>Create Project
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <!-- Table Footer with Pagination -->
+        <div class="card-footer bg-white border-top py-3">
+            <div class="d-flex justify-content-between align-items-center">
+                <small class="text-muted">Showing 1-10 of {{ projects|length|default(24) }} projects</small>
+                <nav aria-label="Project pagination">
+                    <ul class="pagination pagination-sm mb-0">
+                        <li class="page-item disabled">
+                            <a class="page-link" href="#" tabindex="-1">Previous</a>
+                        </li>
+                        <li class="page-item active"><a class="page-link" href="#">1</a></li>
+                        <li class="page-item"><a class="page-link" href="#">2</a></li>
+                        <li class="page-item"><a class="page-link" href="#">3</a></li>
+                        <li class="page-item">
+                            <a class="page-link" href="#">Next</a>
+                        </li>
+                    </ul>
+                </nav>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Create Project Modal -->
+<div class="modal fade" id="createProjectModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content border-0">
+            <div class="modal-header bg-light border-bottom">
+                <h5 class="modal-title fw-semibold">
+                    <i class="bi bi-plus-circle me-2 text-primary"></i>Create New Project
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4">
+                <form method="POST" action="{{ url_for('manager.create_project') }}">
+                    <div class="mb-3">
+                        <label class="form-label fw-medium">Project Title <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" name="title" 
+                               placeholder="e.g., E-commerce Website Development" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label fw-medium">Description <span class="text-danger">*</span></label>
+                        <textarea class="form-control" name="description" rows="4" 
+                                  placeholder="Describe the project requirements, goals, and scope..." required></textarea>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-medium">Complexity <span class="text-danger">*</span></label>
+                            <select class="form-select" name="complexity" required>
+                                <option value="" disabled selected>Select complexity</option>
+                                <option value="Low">Low - Simple, few features</option>
+                                <option value="Medium">Medium - Standard features</option>
+                                <option value="High">High - Complex, multiple integrations</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-medium">Deadline <span class="text-danger">*</span></label>
+                            <input type="date" class="form-control" name="deadline" 
+                                   min="{{ now().strftime('%Y-%m-%d') }}" required>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label fw-medium">Customer <span class="text-danger">*</span></label>
+                        <select class="form-select" name="customer_id" required>
+                            <option value="" disabled selected>Select customer</option>
+                            {% for customer in customers %}
+                            <option value="{{ customer.id }}">{{ customer.name }} ({{ customer.email }})</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label fw-medium">Budget Range (Optional)</label>
+                        <select class="form-select" name="budget_range">
+                            <option value="" selected>Select budget range</option>
+                            <option value="<5k">Less than $5,000</option>
+                            <option value="5k-10k">$5,000 - $10,000</option>
+                            <option value="10k-25k">$10,000 - $25,000</option>
+                            <option value="25k-50k">$25,000 - $50,000</option>
+                            <option value=">50k">$50,000+</option>
+                        </select>
+                    </div>
+                    
+                    <div class="d-flex justify-content-end gap-3 mt-4">
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+                            <i class="bi bi-x-lg me-2"></i>Cancel
+                        </button>
+                        <button type="submit" class="btn btn-primary px-5">
+                            <i class="bi bi-check-circle me-2"></i>Create Project
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Assign Team Modal -->
+<div class="modal fade" id="assignTeamModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content border-0">
+            <div class="modal-header bg-light border-bottom">
+                <h5 class="modal-title fw-semibold">
+                    <i class="bi bi-people me-2 text-primary"></i>Assign Team to Project
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4">
+                <div class="mb-3">
+                    <h6 class="fw-medium mb-2">Project: <span id="selected-project-name" class="text-primary"></span></h6>
+                    <input type="hidden" id="selected-project-id">
+                </div>
+                
+                <div class="alert alert-info bg-light border-0">
+                    <i class="bi bi-info-circle me-2"></i>
+                    Select team members to assign to this project. They will be able to view and work on tasks.
+                </div>
+                
+                <div class="row g-3">
+                    {% for member in team_members %}
+                    <div class="col-md-6">
+                        <div class="card border-0 bg-light hover-shadow">
+                            <div class="card-body">
+                                <div class="d-flex align-items-center">
+                                    <img src="https://ui-avatars.com/api/?name={{ member.name|urlencode }}&background={{ '0d6efd' if 'frontend' in member.specialization else '198754' if 'backend' in member.specialization else '6c757d' }}&color=fff&size=48" 
+                                         class="avatar-sm rounded-circle me-3" alt="{{ member.name }}">
+                                    <div class="flex-grow-1">
+                                        <h6 class="mb-1 fw-semibold">{{ member.name }}</h6>
+                                        <div class="d-flex flex-wrap gap-1">
+                                            <span class="badge bg-primary bg-opacity-10 text-primary small">
+                                                {{ member.specialization|default('Developer') }}
+                                            </span>
+                                            <small class="text-muted ms-2">{{ member.experience|default('3') }} yrs</small>
+                                        </div>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" name="team_member" 
+                                               value="{{ member.id }}" id="member{{ member.id }}">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                
+                <div class="mt-4">
+                    <label class="form-label fw-medium">Assignment Role</label>
+                    <select class="form-select" name="assignment_role">
+                        <option value="developer">Developer</option>
+                        <option value="lead">Lead Developer</option>
+                        <option value="designer">Designer</option>
+                        <option value="tester">Tester</option>
+                    </select>
+                    <div class="form-text">Select the primary role for assigned team members.</div>
+                </div>
+                
+                <div class="d-flex justify-content-end gap-3 mt-4">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+                        <i class="bi bi-x-lg me-2"></i>Cancel
+                    </button>
+                    <button type="button" class="btn btn-primary" onclick="confirmTeamAssignment()">
+                        <i class="bi bi-check-lg me-2"></i>Assign Team
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Create Task Modal -->
+<div class="modal fade" id="createTaskModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content border-0">
+            <div class="modal-header bg-light border-bottom">
+                <h5 class="modal-title fw-semibold">
+                    <i class="bi bi-check2-square me-2 text-success"></i>Create New Task
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4">
+                <form method="POST" action="{{ url_for('manager.create_task') }}">
+                    <input type="hidden" id="task-project-id" name="project_id">
+                    
+                    <div class="mb-3">
+                        <label class="form-label fw-medium">Task Title <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" name="title" 
+                               placeholder="e.g., Implement user authentication" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label fw-medium">Description</label>
+                        <textarea class="form-control" name="description" rows="3" 
+                                  placeholder="Provide detailed requirements and acceptance criteria..."></textarea>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-medium">Task Role <span class="text-danger">*</span></label>
+                            <select class="form-select" name="role" required>
+                                <option value="" disabled selected>Select role</option>
+                                <option value="Frontend">Frontend Development</option>
+                                <option value="Backend">Backend Development</option>
+                                <option value="DB">Database Design</option>
+                                <option value="Integration">API Integration</option>
+                                <option value="DevOps">DevOps & Deployment</option>
+                                <option value="QA">Quality Assurance</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-medium">Priority</label>
+                            <select class="form-select" name="priority">
+                                <option value="Low">Low</option>
+                                <option value="Medium" selected>Medium</option>
+                                <option value="High">High</option>
+                                <option value="Urgent">Urgent</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-medium">Assignee</label>
+                            <select class="form-select" name="assignee_id">
+                                <option value="" selected>Unassigned</option>
+                                {% for member in team_members %}
+                                <option value="{{ member.id }}">{{ member.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-medium">Deadline <span class="text-danger">*</span></label>
+                            <input type="date" class="form-control" name="deadline" required>
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-medium">Estimated Hours</label>
+                            <input type="number" class="form-control" name="estimated_hours" min="0" step="0.5" placeholder="e.g., 8">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-medium">Initial Progress %</label>
+                            <input type="number" class="form-control" name="progress" min="0" max="100" value="0">
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex justify-content-end gap-3 mt-4">
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+                            <i class="bi bi-x-lg me-2"></i>Cancel
+                        </button>
+                        <button type="submit" class="btn btn-success px-5">
+                            <i class="bi bi-check2-circle me-2"></i>Create Task
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .avatar-xs {
+        width: 32px;
+        height: 32px;
+        object-fit: cover;
+    }
+    .avatar-group {
+        display: flex;
+        align-items: center;
+    }
+    .avatar-group .avatar-xs {
+        margin-left: -8px;
+        transition: transform 0.2s;
+        border: 2px solid white;
+    }
+    .avatar-group .avatar-xs:first-child {
+        margin-left: 0;
+    }
+    .avatar-group .avatar-xs:hover {
+        transform: translateY(-2px);
+        z-index: 10;
+    }
+    .hover-shadow:hover {
+        box-shadow: 0 0.25rem 0.75rem rgba(0,0,0,0.05) !important;
+        transition: box-shadow 0.2s;
+    }
+    .project-row {
+        cursor: pointer;
+        transition: background-color 0.2s;
+    }
+    .project-row:hover {
+        background-color: rgba(13, 110, 253, 0.02);
+    }
+    .progress {
+        background-color: #e9ecef;
+        border-radius: 1rem;
+    }
+    .progress-bar {
+        border-radius: 1rem;
+        transition: width 0.4s ease;
+    }
+</style>
+
+<script>
+    // Open Assign Team Modal
+    function openAssignTeamModal(projectId, projectTitle) {
+        document.getElementById('selected-project-id').value = projectId;
+        document.getElementById('selected-project-name').textContent = projectTitle;
+    }
+    
+    // Open Create Task Modal
+    function openCreateTaskModal(projectId, projectTitle) {
+        document.getElementById('task-project-id').value = projectId;
+        document.querySelector('#createTaskModal .modal-title').innerHTML = 
+            '<i class="bi bi-check2-square me-2 text-success"></i>Create Task - ' + projectTitle;
+    }
+    
+    // Confirm Team Assignment
+    function confirmTeamAssignment() {
+        // In production, this will submit the form via AJAX
+        alert('Team assigned successfully!');
+        var modal = bootstrap.Modal.getInstance(document.getElementById('assignTeamModal'));
+        modal.hide();
+    }
+    
+    // Initialize tooltips
+    document.addEventListener('DOMContentLoaded', function() {
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+        tooltipTriggerList.map(function(tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl);
+        });
+        
+        // Make project rows clickable
+        document.querySelectorAll('.project-row').forEach(function(row) {
+            row.addEventListener('click', function(e) {
+                // Don't trigger when clicking on buttons or dropdowns
+                if (!e.target.closest('button') && !e.target.closest('.dropdown')) {
+                    var projectId = this.dataset.projectId;
+                    window.location.href = '/manager/project/' + projectId;
+                }
+            });
+        });
+    });
+</script>
+{% endblock %}
