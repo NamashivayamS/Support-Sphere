@@ -1,319 +1,416 @@
-from flask import Flask, render_template, redirect, url_for, request
-from flask_sqlalchemy import SQLAlchemy
-from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
-from datetime import datetime, timedelta
+from flask import Flask, render_template, redirect, url_for
+from flask_login import login_required, current_user
+from datetime import datetime
 import os
+from dotenv import load_dotenv
+
+# Load environment variables
+load_dotenv()
+
+# Import extensions and models
+from extensions import db, login_manager, mail
+from models import User, NotificationSettings, Project, Task, TeamMember, ChatMessage, TaskNote, Milestone, TaskDependency
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = 'supportspherekey'
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database.db'
+app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'supportsphere-project-key-v2')
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///project_management.db'
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
-db = SQLAlchemy(app)
-login_manager = LoginManager(app)
-login_manager.login_view = 'login'
+# Email Configuration
+app.config['MAIL_SERVER'] = os.getenv('MAIL_SERVER', 'smtp.gmail.com')
+app.config['MAIL_PORT'] = int(os.getenv('MAIL_PORT', 587))
+app.config['MAIL_USE_TLS'] = os.getenv('MAIL_USE_TLS', 'True') == 'True'
+app.config['MAIL_USE_SSL'] = os.getenv('MAIL_USE_SSL', 'False') == 'True'
+app.config['MAIL_USERNAME'] = os.getenv('MAIL_USERNAME')
+app.config['MAIL_PASSWORD'] = os.getenv('MAIL_PASSWORD')
+app.config['MAIL_DEFAULT_SENDER'] = os.getenv('MAIL_DEFAULT_SENDER', 'SupportSphere <noreply@supportsphere.com>')
 
-# --------------------
-# Database Models
-# --------------------
+# Initialize extensions with app
+db.init_app(app)
+login_manager.init_app(app)
+mail.init_app(app)
+login_manager.login_view = 'auth.login'
 
-class User(UserMixin, db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(100))
-    email = db.Column(db.String(100), unique=True)
-    password = db.Column(db.String(100))
-    role = db.Column(db.String(20))  
-    # roles: customer, agent, manager
+# Register blueprints
+from routes.auth import auth_bp
+from routes.manager import manager_bp
+from routes.team import team_bp
+from routes.customer import customer_bp
+from routes.notifications import notifications_bp
+from routes.chat import chat_bp
 
-class Ticket(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    title = db.Column(db.String(200))
-    subject = db.Column(db.String(200), default='')  # Make optional with default
-    description = db.Column(db.Text)
-    status = db.Column(db.String(50), default="Open")  
-    priority = db.Column(db.String(20), default="medium")  # Make optional with default
-    # Open, In Progress, Closed, Overdue
+app.register_blueprint(auth_bp, url_prefix='/auth')
+app.register_blueprint(manager_bp, url_prefix='/manager')
+app.register_blueprint(team_bp, url_prefix='/team')
+app.register_blueprint(customer_bp, url_prefix='/customer')
+app.register_blueprint(notifications_bp, url_prefix='/notifications')
+app.register_blueprint(chat_bp, url_prefix='/chat')
 
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    sla_deadline = db.Column(db.DateTime)
-
-    customer_id = db.Column(db.Integer, db.ForeignKey('user.id'))
-    agent_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)
-    
-    # Add relationships for easier access
-    customer = db.relationship('User', foreign_keys=[customer_id], backref='customer_tickets')
-    agent = db.relationship('User', foreign_keys=[agent_id], backref='agent_tickets')
-    
-    @property
-    def customer_name(self):
-        return self.customer.name if self.customer else "Unknown"
 
 @login_manager.user_loader
 def load_user(user_id):
     return User.query.get(int(user_id))
 
-# Custom template filter for date formatting
+
+# ==================== TEMPLATE FILTERS ====================
+
 @app.template_filter('datetimeformat')
 def datetimeformat(value, format='%Y-%m-%d %H:%M'):
-    if format == 'medium':
-        format='%Y-%m-%d %H:%M'
-    return value.strftime(format) if value else ""
+    if not value:
+        return ''
+    if isinstance(value, str):
+        return value
+    return value.strftime(format)
 
-# --------------------
-# Routes
-# --------------------
+@app.template_filter('dateformat')
+def dateformat(value):
+    return datetimeformat(value, '%Y-%m-%d')
+
+@app.template_filter('timeuntil')
+def timeuntil(value):
+    if not value:
+        return ''
+    delta = value - datetime.utcnow()
+    days = delta.days
+    hours = delta.seconds // 3600
+    
+    if days > 0:
+        return f'{days} days'
+    elif hours > 0:
+        return f'{hours} hours'
+    else:
+        return 'Today'
+
+@app.context_processor
+def inject_now():
+    return {'now': datetime.utcnow}
+
+
+# ==================== ROOT ROUTE ====================
 
 @app.route('/')
 def home():
-    return redirect(url_for('login'))
+    if current_user.is_authenticated:
+        if current_user.role == 'manager':
+            return redirect(url_for('manager.dashboard'))
+        elif current_user.role == 'team_member':
+            return redirect(url_for('team.dashboard'))
+        elif current_user.role == 'customer':
+            return redirect(url_for('customer.dashboard'))
+    return render_template('pages/index.html')
 
-# Register
-@app.route('/register', methods=['GET','POST'])
-def register():
-    if request.method == 'POST':
-        # Handle both old and new form field names
-        first_name = request.form.get('first_name', '')
-        last_name = request.form.get('last_name', '')
-        name = request.form.get('name', f"{first_name} {last_name}".strip())
-        
-        # If name is still empty, use email prefix
-        if not name:
-            name = request.form['email'].split('@')[0]
-            
-        user = User(
-            name=name,
-            email=request.form['email'],
-            password=request.form['password'],
-            role=request.form.get('role', 'customer')  # Default to customer if no role specified
-        )
-        db.session.add(user)
-        db.session.commit()
-        return redirect(url_for('login'))
-    return render_template('register.html')
 
-# Login
-@app.route('/login', methods=['GET','POST'])
-def login():
-    if request.method == 'POST':
-        user = User.query.filter_by(email=request.form['email'], password=request.form['password']).first()
-        if user:
-            login_user(user)
-            return redirect(url_for('dashboard'))
-    return render_template('login.html')
-
-# Dashboard
 @app.route('/dashboard')
 @login_required
 def dashboard():
-    # SLA overdue auto-detection
-    now = datetime.utcnow()
-    overdue_tickets = Ticket.query.filter(Ticket.status != "Closed", Ticket.sla_deadline < now).all()
-    for t in overdue_tickets:
-        t.status = "Overdue"
-    db.session.commit()
+    """General dashboard route that redirects based on user role"""
+    if current_user.role == 'manager':
+        return redirect(url_for('manager.dashboard'))
+    elif current_user.role == 'team_member':
+        return redirect(url_for('team.dashboard'))
+    elif current_user.role == 'customer':
+        return redirect(url_for('customer.dashboard'))
+    else:
+        flash('Invalid user role', 'danger')
+        return redirect(url_for('home'))
 
-    # Role-based view
-    if current_user.role == "customer":
-        tickets = Ticket.query.filter_by(customer_id=current_user.id).all()
-        recent_tickets = tickets[:5]  # Show last 5 tickets
-        stats = {
-            'open_tickets': len([t for t in tickets if t.status == "Open"]),
-            'avg_response_time': '2.5',
-            'resolved_month': len([t for t in tickets if t.status == "Closed"]),
-            'satisfaction_score': '4.2'
-        }
-    elif current_user.role == "agent":
-        tickets = Ticket.query.filter_by(agent_id=current_user.id).all()
-        recent_tickets = tickets[:5]
-        stats = {
-            'assigned_tickets': len([t for t in tickets if t.status in ["Open", "In Progress"]]),
-            'sla_compliance': 85,
-            'resolved_week': len([t for t in tickets if t.status == "Closed"]),
-            'avg_rating': '4.1'
-        }
-    else:  # manager
-        tickets = Ticket.query.all()
-        recent_tickets = tickets[:5]
-        agents = User.query.filter_by(role="agent").all()
-        stats = {
-            'total_open': len([t for t in tickets if t.status == "Open"]),
-            'team_sla': 82,
-            'active_agents': len([a for a in agents]),
-            'total_agents': len(agents),
-            'avg_resolution': '4.2'
-        }
-
-    # Mock SLA status data
-    sla_status = [
-        {'name': 'Response Time', 'compliance': 85, 'description': 'First response within 2 hours'},
-        {'name': 'Resolution Time', 'compliance': 78, 'description': 'Issue resolved within 24 hours'},
-    ]
-
-    return render_template(
-        'dashboard.html',
-        recent_tickets=recent_tickets,
-        stats=stats,
-        sla_status=sla_status
-    )
-
-@app.route('/assign_ticket/<int:ticket_id>', methods=['POST'])
-@login_required
-def assign_ticket(ticket_id):
-    if current_user.role != "manager":
-        return redirect(url_for('dashboard'))
-
-    agent_id = request.form['agent_id']
-    ticket = Ticket.query.get(ticket_id)
-    ticket.agent_id = agent_id
-    ticket.status = "In Progress"
-    db.session.commit()
-    return redirect(url_for('dashboard'))
-
-@app.route('/update_status/<int:ticket_id>', methods=['POST'])
-@login_required
-def update_status(ticket_id):
-    ticket = Ticket.query.get(ticket_id)
-    ticket.status = request.form['status']
-    db.session.commit()
-    return redirect(url_for('dashboard'))
-
-# Create Ticket (Customer)
-@app.route('/create_ticket', methods=['POST'])
-@login_required
-def create_ticket():
-    sla_time = datetime.utcnow() + timedelta(hours=48)  # 48 hour SLA
-    ticket = Ticket(
-        title=request.form['title'],
-        subject=request.form.get('subject', request.form['title']),  # Use title as subject if not provided
-        description=request.form['description'],
-        priority=request.form.get('priority', 'medium'),
-        customer_id=current_user.id,
-        sla_deadline=sla_time
-    )
-    db.session.add(ticket)
-    db.session.commit()
-    return redirect(url_for('dashboard'))
-
-# Logout
-@app.route('/logout')
-def logout():
-    logout_user()
-    return redirect(url_for('login'))
-
-# Missing routes that are referenced in templates
-@app.route('/tickets')
-@login_required
-def tickets():
-    # Role-based ticket view
-    if current_user.role == "customer":
-        tickets = Ticket.query.filter_by(customer_id=current_user.id).all()
-    elif current_user.role == "agent":
-        tickets = Ticket.query.filter_by(agent_id=current_user.id).all()
-    else:  # manager
-        tickets = Ticket.query.all()
-    
-    return render_template('tickets.html', tickets=tickets)
-
-@app.route('/new_ticket', methods=['GET', 'POST'])
-@login_required
-def new_ticket():
-    if request.method == 'POST':
-        sla_time = datetime.utcnow() + timedelta(hours=48)  # 48 hour SLA
-        ticket = Ticket(
-            title=request.form['title'],
-            subject=request.form.get('subject', request.form['title']),
-            description=request.form['description'],
-            priority=request.form.get('priority', 'medium'),
-            customer_id=current_user.id,
-            sla_deadline=sla_time
-        )
-        db.session.add(ticket)
-        db.session.commit()
-        return redirect(url_for('tickets'))
-    return render_template('new_ticket.html')
-
-@app.route('/ticket_detail/<int:id>')
-@login_required
-def ticket_detail(id):
-    ticket = Ticket.query.get_or_404(id)
-    return render_template('ticket_detail.html', ticket=ticket)
-
-@app.route('/knowledge_base')
-@login_required
-def knowledge_base():
-    return render_template('knowledge_base.html')
-
-@app.route('/agents')
-@login_required
-def agents():
-    if current_user.role != 'manager':
-        return redirect(url_for('dashboard'))
-    agents = User.query.filter_by(role='agent').all()
-    return render_template('agents.html', agents=agents)
-
-@app.route('/sla_management')
-@login_required
-def sla_management():
-    if current_user.role != 'manager':
-        return redirect(url_for('dashboard'))
-    return render_template('sla_management.html')
-
-@app.route('/reports')
-@login_required
-def reports():
-    if current_user.role != 'manager':
-        return redirect(url_for('dashboard'))
-    return render_template('reports.html')
-
-@app.route('/profile')
-@login_required
-def profile():
-    return render_template('profile.html')
-
-@app.route('/settings')
-@login_required
-def settings():
-    return render_template('settings.html')
 
 @app.route('/help')
-@login_required
 def help():
-    return render_template('help.html')
+    return render_template('pages/help.html')
 
-@app.route('/contact')
+
+# ==================== PROFILE ROUTE ====================
+
+@app.route('/profile', methods=['GET', 'POST'])
 @login_required
-def contact():
-    return render_template('contact.html')
-
-@app.route('/forgot_password', methods=['GET', 'POST'])
-def forgot_password():
+def profile():
+    from flask import request, flash
+    
     if request.method == 'POST':
-        # For now, just redirect back with a message
-        # In a real app, you'd send a password reset email
-        return redirect(url_for('login'))
-    return render_template('forgot_password.html')
+        action = request.form.get('action')
+        
+        # Update profile information
+        if action == 'update_profile':
+            name = request.form.get('name', '').strip()
+            email = request.form.get('email', '').strip()
+            avatar = request.form.get('avatar', '').strip()  # Placeholder for avatar upload
+            
+            # Validation
+            if not name or not email:
+                flash('Name and email are required.', 'danger')
+                return render_template('pages/profile.html')
+            
+            if len(name) < 2:
+                flash('Name must be at least 2 characters long.', 'danger')
+                return render_template('pages/profile.html')
+            
+            # Email validation
+            if '@' not in email or '.' not in email:
+                flash('Please provide a valid email address.', 'danger')
+                return render_template('pages/profile.html')
+            
+            # Check if email is already taken by another user
+            if email != current_user.email:
+                existing_user = User.query.filter_by(email=email).first()
+                if existing_user:
+                    flash('This email is already in use by another account.', 'danger')
+                    return render_template('pages/profile.html')
+            
+            try:
+                # Update user information
+                current_user.name = name
+                current_user.email = email
+                if avatar:
+                    current_user.avatar = avatar
+                
+                db.session.commit()
+                flash('Profile updated successfully!', 'success')
+                
+            except Exception as e:
+                db.session.rollback()
+                flash('An error occurred while updating your profile.', 'danger')
+                print(f"Profile update error: {str(e)}")
+        
+        # Change password
+        elif action == 'change_password':
+            current_password = request.form.get('current_password', '')
+            new_password = request.form.get('new_password', '')
+            confirm_password = request.form.get('confirm_password', '')
+            
+            # Validation
+            if not current_password or not new_password or not confirm_password:
+                flash('All password fields are required.', 'danger')
+                return render_template('pages/profile.html')
+            
+            # Verify current password
+            if not current_user.check_password(current_password):
+                flash('Current password is incorrect.', 'danger')
+                return render_template('pages/profile.html')
+            
+            # Check password length
+            if len(new_password) < 6:
+                flash('New password must be at least 6 characters long.', 'danger')
+                return render_template('pages/profile.html')
+            
+            # Check password confirmation
+            if new_password != confirm_password:
+                flash('New passwords do not match.', 'danger')
+                return render_template('pages/profile.html')
+            
+            # Check if new password is different from current
+            if current_user.check_password(new_password):
+                flash('New password must be different from current password.', 'danger')
+                return render_template('pages/profile.html')
+            
+            try:
+                # Update password
+                current_user.set_password(new_password)
+                db.session.commit()
+                flash('Password changed successfully!', 'success')
+                
+            except Exception as e:
+                db.session.rollback()
+                flash('An error occurred while changing your password.', 'danger')
+                print(f"Password change error: {str(e)}")
+    
+    return render_template('pages/profile.html')
 
-# --------------------
+
+# ==================== SETTINGS ROUTE ====================
+
+@app.route('/settings', methods=['GET', 'POST'])
+@login_required
+def settings():
+    from flask import request, flash
+    
+    if request.method == 'POST':
+        theme = request.form.get('theme', 'light')
+        
+        # Validate theme value
+        if theme not in ['light', 'dark']:
+            flash('Invalid theme selection.', 'danger')
+            return render_template('pages/settings.html')
+        
+        try:
+            # Update theme preference
+            current_user.theme = theme
+            db.session.commit()
+            flash(f'Theme changed to {theme} mode successfully!', 'success')
+            
+        except Exception as e:
+            db.session.rollback()
+            flash('An error occurred while updating settings.', 'danger')
+            print(f"Settings update error: {str(e)}")
+    
+    return render_template('pages/settings.html')
+
+
+# ==================== INITIALIZATION ====================
+
+def init_db():
+    """Initialize database with sample data"""
+    from datetime import timedelta
+    
+    with app.app_context():
+        db.create_all()
+        
+        # Check if users exist
+        if User.query.count() == 0:
+            print("Creating sample data...")
+            
+            # Create manager
+            manager = User(
+                name='Sarah Chen',
+                email='manager@supportsphere.com',
+                role='manager'
+            )
+            manager.set_password('manager123')
+            
+            # Create team members
+            team1 = User(
+                name='Mike Wong',
+                email='mike@supportsphere.com',
+                role='team_member'
+            )
+            team1.set_password('team123')
+            
+            team2 = User(
+                name='Lisa Patel',
+                email='lisa@supportsphere.com',
+                role='team_member'
+            )
+            team2.set_password('team123')
+            
+            team3 = User(
+                name='James Wilson',
+                email='james@supportsphere.com',
+                role='team_member'
+            )
+            team3.set_password('team123')
+            
+            # Create customers
+            customer1 = User(
+                name='John Smith',
+                email='john@example.com',
+                role='customer'
+            )
+            customer1.set_password('customer123')
+            
+            customer2 = User(
+                name='Emily Davis',
+                email='emily@example.com',
+                role='customer'
+            )
+            customer2.set_password('customer123')
+            
+            db.session.add_all([manager, team1, team2, team3, customer1, customer2])
+            db.session.commit()
+            
+            # Create notification settings
+            for user in [manager, team1, team2, team3, customer1, customer2]:
+                settings = NotificationSettings(user_id=user.id)
+                db.session.add(settings)
+            db.session.commit()
+            
+            # Create project
+            project = Project(
+                title='E-commerce Website Development',
+                description='Build a modern e-commerce platform with React, Node.js, and PostgreSQL',
+                complexity='High',
+                status='In Progress',
+                progress=35,
+                deadline=datetime.utcnow() + timedelta(days=45),
+                customer_id=customer1.id,
+                manager_id=manager.id
+            )
+            db.session.add(project)
+            db.session.commit()
+            
+            # Assign team members
+            team_members = [
+                TeamMember(project_id=project.id, user_id=team1.id, role='Lead Developer'),
+                TeamMember(project_id=project.id, user_id=team2.id, role='Frontend Developer'),
+                TeamMember(project_id=project.id, user_id=team3.id, role='Backend Developer')
+            ]
+            db.session.add_all(team_members)
+            
+            # Create tasks
+            tasks = [
+                Task(
+                    title='Setup project repository',
+                    description='Initialize Git repo, setup project structure, install dependencies',
+                    role='Backend',
+                    priority='High',
+                    deadline=datetime.utcnow() + timedelta(days=3),
+                    project_id=project.id,
+                    assignee_id=team1.id,
+                    created_by_id=manager.id,
+                    progress=100,
+                    status='Completed',
+                    completed_at=datetime.utcnow() - timedelta(days=1)
+                ),
+                Task(
+                    title='Design database schema',
+                    description='Create ERD, define tables, relationships, and indexes',
+                    role='DB',
+                    priority='High',
+                    deadline=datetime.utcnow() + timedelta(days=5),
+                    project_id=project.id,
+                    assignee_id=team3.id,
+                    created_by_id=manager.id,
+                    progress=80,
+                    status='In Progress'
+                ),
+                Task(
+                    title='Create homepage UI',
+                    description='Responsive homepage with product grid, search bar, categories',
+                    role='Frontend',
+                    priority='Medium',
+                    deadline=datetime.utcnow() + timedelta(days=10),
+                    project_id=project.id,
+                    assignee_id=team2.id,
+                    created_by_id=manager.id,
+                    progress=30,
+                    status='In Progress'
+                )
+            ]
+            db.session.add_all(tasks)
+            db.session.commit()
+            
+            # Add chat messages
+            messages = [
+                ChatMessage(
+                    message='Hi team, I\'ve reviewed the requirements. Let\'s start with the database design first.',
+                    project_id=project.id,
+                    sender_id=manager.id
+                ),
+                ChatMessage(
+                    message='Database schema is ready for review.',
+                    project_id=project.id,
+                    sender_id=team3.id
+                ),
+                ChatMessage(
+                    message='Looking forward to seeing the progress!',
+                    project_id=project.id,
+                    sender_id=customer1.id
+                )
+            ]
+            db.session.add_all(messages)
+            db.session.commit()
+            
+            print("=" * 60)
+            print("✅ DATABASE INITIALIZED SUCCESSFULLY!")
+            print("=" * 60)
+            print("\n🔐 TEST CREDENTIALS:")
+            print("   Manager: manager@supportsphere.com / manager123")
+            print("   Team: mike@supportsphere.com / team123")
+            print("   Customer: john@example.com / customer123")
+            print("=" * 60)
+
+
+# ==================== RUN APP ====================
 
 if __name__ == '__main__':
-    with app.app_context():
-        # Check if we need to add new columns
-        try:
-            # Try to query with new columns
-            db.session.execute(db.text("SELECT subject, priority FROM ticket LIMIT 1"))
-        except Exception:
-            # Columns don't exist, add them
-            try:
-                db.session.execute(db.text("ALTER TABLE ticket ADD COLUMN subject VARCHAR(200) DEFAULT ''"))
-                db.session.execute(db.text("ALTER TABLE ticket ADD COLUMN priority VARCHAR(20) DEFAULT 'medium'"))
-                db.session.commit()
-                print("Added new columns to ticket table")
-            except Exception as e:
-                print(f"Error adding columns: {e}")
-                # If ALTER TABLE fails, recreate the database
-                db.drop_all()
-                db.create_all()
-                print("Recreated database with new schema")
-        
-        # Ensure tables exist
-        db.create_all()
-    app.run(debug=True)
+    init_db()
+    app.run(debug=True, port=5000)

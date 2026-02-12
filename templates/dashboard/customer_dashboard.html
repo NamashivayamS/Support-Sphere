@@ -1,0 +1,122 @@
+{% extends "base.html" %}
+
+{% block title %}My Projects - SupportSphere{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4 py-4">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h2 fw-bold mb-2">
+                <i class="bi bi-folder text-primary me-2"></i>My Projects
+            </h1>
+            <p class="text-muted mb-0">Track the status and progress of your projects</p>
+        </div>
+        <a href="{{ url_for('customer.new_project') }}" class="btn btn-primary">
+            <i class="bi bi-plus-circle me-2"></i>New Project
+        </a>
+    </div>
+    
+    <!-- Projects Grid -->
+    <div class="row g-4">
+        {% for project in projects %}
+        <div class="col-xl-4 col-md-6">
+            <div class="card border-0 shadow-sm h-100 hover-lift">
+                <div class="card-body p-4">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <div>
+                            <h5 class="fw-bold mb-1">
+                                <a href="{{ url_for('customer.project_detail', project_id=project.id) }}" 
+                                   class="text-dark text-decoration-none">
+                                    {{ project.title }}
+                                </a>
+                            </h5>
+                            <span class="badge bg-{{ 'success' if project.status == 'Completed' else 'primary' if project.status == 'In Progress' else 'warning' }} px-3 py-2">
+                                {{ project.status }}
+                            </span>
+                        </div>
+                        <div class="dropdown">
+                            <button class="btn btn-link text-dark p-0" data-bs-toggle="dropdown">
+                                <i class="bi bi-three-dots-vertical"></i>
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end shadow-sm">
+                                <li>
+                                    <a class="dropdown-item" href="{{ url_for('customer.project_detail', project_id=project.id) }}">
+                                        <i class="bi bi-eye me-2"></i>View Details
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item" href="{{ url_for('chat.project_chat', project_id=project.id) }}">
+                                        <i class="bi bi-chat-dots me-2"></i>Open Chat
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <p class="text-muted small mb-3">
+                        {{ project.description|truncate(100) }}
+                    </p>
+                    
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between mb-1">
+                            <small class="text-muted">Overall Progress</small>
+                            <small class="fw-semibold">{{ project.progress }}%</small>
+                        </div>
+                        <div class="progress" style="height: 8px;">
+                            <div class="progress-bar bg-{{ 'success' if project.progress >= 75 else 'primary' }}" 
+                                 style="width: {{ project.progress }}%"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <small class="text-muted d-block">
+                                <i class="bi bi-calendar me-1"></i>Deadline: {{ project.deadline|dateformat }}
+                            </small>
+                            <small class="text-{{ 'danger' if project.days_remaining < 7 else 'warning' if project.days_remaining < 14 else 'success' }}">
+                                <i class="bi bi-clock me-1"></i>{{ project.days_remaining }} days left
+                            </small>
+                        </div>
+                        <span class="badge bg-{{ 'success' if project.complexity == 'Low' else 'warning' if project.complexity == 'Medium' else 'danger' }} bg-opacity-10 text-{{ 'success' if project.complexity == 'Low' else 'warning' if project.complexity == 'Medium' else 'danger' }} px-3 py-2">
+                            {{ project.complexity }} Priority
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <div class="col-12">
+            <div class="card border-0 bg-light py-5">
+                <div class="card-body text-center">
+                    <i class="bi bi-folder display-1 text-muted opacity-25 mb-3"></i>
+                    <h4 class="text-muted mb-3">No projects yet</h4>
+                    <p class="text-muted mb-4">Get started by creating your first project</p>
+                    <a href="{{ url_for('customer.new_project') }}" class="btn btn-primary btn-lg">
+                        <i class="bi bi-plus-circle me-2"></i>Create Your First Project
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<style>
+    .hover-lift {
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .hover-lift:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 0.5rem 1.5rem rgba(0,0,0,0.1) !important;
+    }
+    .progress {
+        background-color: #e9ecef;
+        border-radius: 1rem;
+    }
+    .progress-bar {
+        border-radius: 1rem;
+        transition: width 0.4s ease;
+    }
+</style>
+{% endblock %}
