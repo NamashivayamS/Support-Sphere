@@ -1,0 +1,573 @@
+{% extends "base.html" %}
+
+{% block title %}My Tasks - SupportSphere{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4 py-4">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h2 fw-bold mb-2">
+                <i class="bi bi-list-check text-primary me-2"></i>My Workspace
+            </h1>
+            <p class="text-muted mb-0">Hello <span class="fw-semibold">{{ current_user.name }}</span>, here are your assigned tasks.</p>
+        </div>
+        <div>
+            <button class="btn btn-outline-primary" onclick="location.reload()">
+                <i class="bi bi-arrow-repeat me-2"></i>Refresh
+            </button>
+        </div>
+    </div>
+    
+    <!-- Overview Stats -->
+    <div class="row g-3 mb-4">
+        <div class="col-xl-3 col-md-6">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0 bg-primary bg-opacity-10 p-3 rounded-circle">
+                            <i class="bi bi-check2-square fs-4 text-primary"></i>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h6 class="text-muted mb-1">Assigned Tasks</h6>
+                            <h2 class="mb-0 fw-bold">{{ stats.total_tasks|default(12) }}</h2>
+                            <small class="text-success">
+                                <i class="bi bi-arrow-up me-1"></i>+2 new
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-xl-3 col-md-6">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0 bg-success bg-opacity-10 p-3 rounded-circle">
+                            <i class="bi bi-check-circle fs-4 text-success"></i>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h6 class="text-muted mb-1">Completed</h6>
+                            <h2 class="mb-0 fw-bold">{{ stats.completed|default(8) }}</h2>
+                            <small class="text-success">This week</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-xl-3 col-md-6">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0 bg-warning bg-opacity-10 p-3 rounded-circle">
+                            <i class="bi bi-play-circle fs-4 text-warning"></i>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h6 class="text-muted mb-1">In Progress</h6>
+                            <h2 class="mb-0 fw-bold">{{ stats.in_progress|default(4) }}</h2>
+                            <small class="text-warning">2 due this week</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-xl-3 col-md-6">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0 bg-danger bg-opacity-10 p-3 rounded-circle">
+                            <i class="bi bi-exclamation-triangle fs-4 text-danger"></i>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h6 class="text-muted mb-1">Overdue</h6>
+                            <h2 class="mb-0 fw-bold">{{ stats.overdue|default(1) }}</h2>
+                            <small class="text-danger">Need attention</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Main Content Row -->
+    <div class="row g-4">
+        <!-- Task List Column -->
+        <div class="col-lg-8">
+            <!-- Active Tasks Card -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-white border-bottom py-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0 fw-semibold">
+                            <i class="bi bi-list-task me-2 text-primary"></i>My Active Tasks
+                        </h5>
+                        <div class="btn-group">
+                            <button class="btn btn-sm btn-outline-secondary active">All</button>
+                            <button class="btn btn-sm btn-outline-secondary">Today</button>
+                            <button class="btn btn-sm btn-outline-secondary">This Week</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card-body p-0">
+                    {% for task in tasks %}
+                    <div class="task-item p-4 border-bottom {% if loop.first %}pt-4{% endif %}">
+                        <div class="d-flex justify-content-between align-items-start mb-3">
+                            <div class="d-flex">
+                                <div class="me-3">
+                                    <div class="task-status-indicator bg-{{ 'success' if task.status == 'Completed' else 'primary' if task.status == 'In Progress' else 'warning' }} rounded-circle" 
+                                         style="width: 12px; height: 12px; margin-top: 8px;"></div>
+                                </div>
+                                <div>
+                                    <h5 class="fw-semibold mb-2">
+                                        <a href="{{ url_for('team.task_detail', task_id=task.id) }}" class="text-dark text-decoration-none">
+                                            {{ task.title }}
+                                        </a>
+                                        {% if task.priority == 'High' %}
+                                        <span class="badge bg-danger ms-2">High</span>
+                                        {% elif task.priority == 'Urgent' %}
+                                        <span class="badge bg-danger ms-2">Urgent</span>
+                                        {% elif task.priority == 'Medium' %}
+                                        <span class="badge bg-warning ms-2">Medium</span>
+                                        {% endif %}
+                                    </h5>
+                                    <p class="text-muted mb-3">{{ task.description|truncate(100) }}</p>
+                                    
+                                    <div class="d-flex flex-wrap gap-3">
+                                        <span class="badge bg-light text-dark py-2 px-3">
+                                            <i class="bi bi-folder me-1"></i>{{ task.project.title }}
+                                        </span>
+                                        <span class="badge bg-light text-dark py-2 px-3">
+                                            <i class="bi bi-tag me-1"></i>{{ task.role }}
+                                        </span>
+                                        <span class="badge bg-{{ 'danger' if task.is_overdue else 'light text-dark' }} py-2 px-3">
+                                            <i class="bi bi-calendar me-1"></i>
+                                            Due: {{ task.deadline|dateformat }}
+                                            {% if task.is_overdue %}
+                                            <span class="ms-1 text-danger fw-bold">(Overdue)</span>
+                                            {% endif %}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="text-end">
+                                <span class="badge bg-{{ 'success' if task.status == 'Completed' else 'primary' if task.status == 'In Progress' else 'secondary' }} px-3 py-2">
+                                    {{ task.status }}
+                                </span>
+                            </div>
+                        </div>
+                        
+                        <!-- Progress Bar -->
+                        <div class="row align-items-center mt-3">
+                            <div class="col-md-7">
+                                <div class="d-flex align-items-center">
+                                    <span class="me-3 small fw-medium">{{ task.progress }}%</span>
+                                    <div class="flex-grow-1">
+                                        <div class="progress" style="height: 8px;">
+                                            <div class="progress-bar bg-{{ 'success' if task.progress >= 75 else 'primary' if task.progress >= 40 else 'warning' }}" 
+                                                 style="width: {{ task.progress }}%"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-5">
+                                <div class="d-flex justify-content-md-end gap-2 mt-3 mt-md-0">
+                                    <button class="btn btn-sm btn-outline-primary" 
+                                            onclick="openUpdateProgressModal({{ task.id }}, '{{ task.title|escapejs }}', {{ task.progress }})"
+                                            data-bs-toggle="modal" 
+                                            data-bs-target="#updateProgressModal">
+                                        <i class="bi bi-arrow-up-circle me-1"></i>Update
+                                    </button>
+                                    <button class="btn btn-sm btn-outline-secondary" 
+                                            onclick="openAddNoteModal({{ task.id }}, '{{ task.title|escapejs }}')"
+                                            data-bs-toggle="modal" 
+                                            data-bs-target="#addNoteModal">
+                                        <i class="bi bi-chat me-1"></i>Note
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Recent Note -->
+                        {% if task.notes and task.notes|length > 0 %}
+                        <div class="mt-3 p-3 bg-light rounded">
+                            <div class="d-flex align-items-start">
+                                <i class="bi bi-chat-quote text-muted me-2 mt-1"></i>
+                                <div>
+                                    <small class="fw-medium">Latest note:</small>
+                                    <p class="text-muted small mb-0">{{ task.notes[-1].content }}</p>
+                                    <small class="text-muted">{{ task.notes[-1].timestamp|timeformat }}</small>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% else %}
+                    <div class="text-center py-5">
+                        <div class="py-4">
+                            <i class="bi bi-check2-circle display-1 text-muted opacity-25 mb-3"></i>
+                            <h4 class="text-muted mb-2">No tasks assigned</h4>
+                            <p class="text-muted mb-0">You're all caught up! Check back later for new assignments.</p>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            
+            <!-- Recently Completed -->
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white border-bottom py-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0 fw-semibold">
+                            <i class="bi bi-check-circle me-2 text-success"></i>Recently Completed
+                        </h5>
+                        <a href="#" class="btn btn-link btn-sm text-decoration-none">View All</a>
+                    </div>
+                </div>
+                <div class="card-body p-0">
+                    <div class="list-group list-group-flush">
+                        <div class="list-group-item border-0 px-4 py-3">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div class="d-flex align-items-center">
+                                    <i class="bi bi-check-circle-fill text-success me-3"></i>
+                                    <div>
+                                        <h6 class="mb-1">Implement login API</h6>
+                                        <small class="text-muted">Completed 2 days ago</small>
+                                    </div>
+                                </div>
+                                <span class="badge bg-success bg-opacity-10 text-success px-3 py-2">Done</span>
+                            </div>
+                        </div>
+                        <div class="list-group-item border-0 px-4 py-3">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div class="d-flex align-items-center">
+                                    <i class="bi bi-check-circle-fill text-success me-3"></i>
+                                    <div>
+                                        <h6 class="mb-1">Design database schema</h6>
+                                        <small class="text-muted">Completed 3 days ago</small>
+                                    </div>
+                                </div>
+                                <span class="badge bg-success bg-opacity-10 text-success px-3 py-2">Done</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Right Sidebar -->
+        <div class="col-lg-4">
+            <!-- Quick Note Card -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-white border-bottom py-3">
+                    <h5 class="mb-0 fw-semibold">
+                        <i class="bi bi-chat-left-text me-2 text-primary"></i>Quick Note
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form action="{{ url_for('team.add_note') }}" method="POST">
+                        <div class="mb-3">
+                            <label class="form-label fw-medium">Select Task</label>
+                            <select class="form-select" name="task_id" required>
+                                <option value="" disabled selected>Choose a task...</option>
+                                {% for task in tasks %}
+                                <option value="{{ task.id }}">#{{ task.id }} - {{ task.title|truncate(30) }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label fw-medium">Your Note</label>
+                            <textarea class="form-control" name="content" rows="4" 
+                                      placeholder="Add a comment, question, or update..." required></textarea>
+                        </div>
+                        
+                        <div class="mb-3 form-check">
+                            <input type="checkbox" class="form-check-input" id="notifyManager" name="notify_manager">
+                            <label class="form-check-label" for="notifyManager">
+                                Notify project manager
+                            </label>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="bi bi-send me-2"></i>Post Note
+                        </button>
+                    </form>
+                </div>
+            </div>
+            
+            <!-- My Projects Card -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-white border-bottom py-3">
+                    <h5 class="mb-0 fw-semibold">
+                        <i class="bi bi-folder me-2 text-info"></i>My Projects
+                    </h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="list-group list-group-flush">
+                        {% for project in projects %}
+                        <a href="{{ url_for('chat.project_chat', project_id=project.id) }}" 
+                           class="list-group-item list-group-item-action border-0 px-4 py-3">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="mb-1 fw-semibold">{{ project.title }}</h6>
+                                    <small class="text-muted">
+                                        <i class="bi bi-person me-1"></i>Manager: {{ project.manager.name }}
+                                    </small>
+                                </div>
+                                <span class="badge bg-{{ 'success' if project.status == 'In Progress' else 'warning' }}">
+                                    {{ project.status }}
+                                </span>
+                            </div>
+                            <div class="mt-2">
+                                <div class="d-flex justify-content-between mb-1">
+                                    <small class="text-muted">Progress</small>
+                                    <small class="fw-medium">{{ project.progress }}%</small>
+                                </div>
+                                <div class="progress" style="height: 4px;">
+                                    <div class="progress-bar" style="width: {{ project.progress }}%"></div>
+                                </div>
+                            </div>
+                        </a>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Recent Activity Card -->
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white border-bottom py-3">
+                    <h5 class="mb-0 fw-semibold">
+                        <i class="bi bi-clock-history me-2 text-warning"></i>Recent Activity
+                    </h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="list-group list-group-flush">
+                        <div class="list-group-item border-0 px-4 py-3">
+                            <div class="d-flex">
+                                <i class="bi bi-check-circle-fill text-success me-3 mt-1"></i>
+                                <div>
+                                    <p class="mb-1 fw-medium">Task #124 completed</p>
+                                    <small class="text-muted">2 hours ago</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="list-group-item border-0 px-4 py-3">
+                            <div class="d-flex">
+                                <i class="bi bi-chat-fill text-primary me-3 mt-1"></i>
+                                <div>
+                                    <p class="mb-1 fw-medium">Manager commented on #125</p>
+                                    <small class="text-muted">5 hours ago</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="list-group-item border-0 px-4 py-3">
+                            <div class="d-flex">
+                                <i class="bi bi-arrow-up-circle-fill text-warning me-3 mt-1"></i>
+                                <div>
+                                    <p class="mb-1 fw-medium">Progress updated to 75% on #126</p>
+                                    <small class="text-muted">Yesterday</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Update Progress Modal -->
+<div class="modal fade" id="updateProgressModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content border-0">
+            <div class="modal-header bg-light border-bottom">
+                <h5 class="modal-title fw-semibold">
+                    <i class="bi bi-arrow-up-circle me-2 text-primary"></i>Update Task Progress
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4">
+                <form method="POST" action="{{ url_for('team.update_progress') }}">
+                    <input type="hidden" id="progress-task-id" name="task_id">
+                    
+                    <div class="mb-3">
+                        <label class="form-label fw-medium">Task</label>
+                        <p id="progress-task-title" class="form-control-plaintext fw-semibold"></p>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label class="form-label fw-medium">Current Progress</label>
+                        <div class="d-flex align-items-center gap-3">
+                            <span id="progress-percent-display" class="h4 mb-0 text-primary fw-bold">50%</span>
+                            <div class="flex-grow-1">
+                                <input type="range" class="form-range" id="progress-slider" 
+                                       name="progress" min="0" max="100" step="5" value="50">
+                            </div>
+                        </div>
+                        <div class="d-flex justify-content-between mt-1">
+                            <small class="text-muted">Not started</small>
+                            <small class="text-muted">In progress</small>
+                            <small class="text-muted">Complete</small>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label fw-medium">Status</label>
+                        <select class="form-select" name="status" id="progress-status">
+                            <option value="Pending">Pending</option>
+                            <option value="In Progress" selected>In Progress</option>
+                            <option value="Completed">Completed</option>
+                            <option value="Blocked">Blocked</option>
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label fw-medium">Status Note (Optional)</label>
+                        <textarea class="form-control" name="note" rows="3" 
+                                  placeholder="Describe what you've completed or any blockers..."></textarea>
+                    </div>
+                    
+                    <div class="d-flex justify-content-end gap-3 mt-4">
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+                            <i class="bi bi-x-lg me-2"></i>Cancel
+                        </button>
+                        <button type="submit" class="btn btn-primary px-4">
+                            <i class="bi bi-check-circle me-2"></i>Update Progress
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Note Modal -->
+<div class="modal fade" id="addNoteModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content border-0">
+            <div class="modal-header bg-light border-bottom">
+                <h5 class="modal-title fw-semibold">
+                    <i class="bi bi-chat-left-text me-2 text-primary"></i>Add Note
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4">
+                <form method="POST" action="{{ url_for('team.add_note') }}">
+                    <input type="hidden" id="note-task-id" name="task_id">
+                    
+                    <div class="mb-3">
+                        <label class="form-label fw-medium">Task</label>
+                        <p id="note-task-title" class="form-control-plaintext fw-semibold"></p>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label fw-medium">Your Note</label>
+                        <textarea class="form-control" name="content" rows="5" 
+                                  placeholder="Add a comment, question, or update..." required></textarea>
+                    </div>
+                    
+                    <div class="mb-3 form-check">
+                        <input type="checkbox" class="form-check-input" id="modal-notify-manager" name="notify_manager">
+                        <label class="form-check-label" for="modal-notify-manager">
+                            Notify project manager
+                        </label>
+                    </div>
+                    
+                    <div class="d-flex justify-content-end gap-3 mt-4">
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+                            <i class="bi bi-x-lg me-2"></i>Cancel
+                        </button>
+                        <button type="submit" class="btn btn-primary px-4">
+                            <i class="bi bi-send me-2"></i>Post Note
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .task-item {
+        transition: background-color 0.2s ease;
+    }
+    .task-item:hover {
+        background-color: rgba(13, 110, 253, 0.02);
+    }
+    .task-status-indicator {
+        box-shadow: 0 0 0 2px white, 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .progress {
+        background-color: #e9ecef;
+        border-radius: 1rem;
+    }
+    .progress-bar {
+        border-radius: 1rem;
+        transition: width 0.4s ease;
+    }
+    .list-group-item-action:hover {
+        background-color: rgba(13, 110, 253, 0.02);
+    }
+    .avatar-sm {
+        width: 40px;
+        height: 40px;
+        object-fit: cover;
+    }
+</style>
+
+<script>
+    // Open Update Progress Modal
+    function openUpdateProgressModal(taskId, taskTitle, currentProgress) {
+        document.getElementById('progress-task-id').value = taskId;
+        document.getElementById('progress-task-title').textContent = taskTitle;
+        
+        var slider = document.getElementById('progress-slider');
+        var display = document.getElementById('progress-percent-display');
+        
+        slider.value = currentProgress;
+        display.textContent = currentProgress + '%';
+        
+        // Update status dropdown based on progress
+        var statusSelect = document.getElementById('progress-status');
+        if (currentProgress == 0) {
+            statusSelect.value = 'Pending';
+        } else if (currentProgress == 100) {
+            statusSelect.value = 'Completed';
+        } else {
+            statusSelect.value = 'In Progress';
+        }
+        
+        // Update display on slider move
+        slider.oninput = function() {
+            display.textContent = this.value + '%';
+            if (this.value == 0) {
+                statusSelect.value = 'Pending';
+            } else if (this.value == 100) {
+                statusSelect.value = 'Completed';
+            } else {
+                statusSelect.value = 'In Progress';
+            }
+        };
+    }
+    
+    // Open Add Note Modal
+    function openAddNoteModal(taskId, taskTitle) {
+        document.getElementById('note-task-id').value = taskId;
+        document.getElementById('note-task-title').textContent = taskTitle;
+    }
+    
+    // Initialize
+    document.addEventListener('DOMContentLoaded', function() {
+        // Auto-hide alerts after 5 seconds
+        setTimeout(function() {
+            document.querySelectorAll('.alert').forEach(function(alert) {
+                var bsAlert = new bootstrap.Alert(alert);
+                bsAlert.close();
+            });
+        }, 5000);
+    });
+</script>
+{% endblock %}

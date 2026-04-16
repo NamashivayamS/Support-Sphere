@@ -1,0 +1,52 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: support-sphere-backend
+    ports:
+      - "5000:5000"
+    environment:
+      - FLASK_APP=app.py
+      - FLASK_ENV=development
+      - SECRET_KEY=supportsphere-project-key-v2
+      - SQLALCHEMY_DATABASE_URI=sqlite:///instance/project_management.db
+    volumes:
+      - backend-data:/app/instance
+    networks:
+      - support-sphere-network
+    healthcheck:
+      test: ["CMD", "python", "-c", "import requests; requests.get('http://localhost:5000')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: support-sphere-frontend
+    ports:
+      - "8080:80"
+    depends_on:
+      - backend
+    networks:
+      - support-sphere-network
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:80"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
+
+networks:
+  support-sphere-network:
+    driver: bridge
+
+volumes:
+  backend-data:
+    driver: local

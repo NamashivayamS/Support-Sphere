@@ -1,0 +1,260 @@
+{% extends "base.html" %}
+
+{% block title %}Team Dashboard - SupportSphere{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Header with Notification Bell -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 fw-bold mb-2">My Workspace</h1>
+            <p class="text-muted">Hello {{ current_user.name }}, here are your assigned tasks.</p>
+        </div>
+        <div class="d-flex align-items-center gap-3">
+            <!-- Email Notification Settings Button -->
+            <a href="{{ url_for('notification_settings') }}" class="btn btn-outline-primary position-relative">
+                <i class="bi bi-bell fs-5"></i>
+                <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+                    3
+                    <span class="visually-hidden">unread notifications</span>
+                </span>
+            </a>
+            <a href="{{ url_for('notification_settings') }}" class="btn btn-primary">
+                <i class="bi bi-gear me-2"></i>Notification Settings
+            </a>
+        </div>
+    </div>
+
+    <!-- Tasks Table with Email Icons -->
+    <div class="card border-0 shadow-sm">
+        <div class="card-header bg-white border-bottom py-3">
+            <div class="d-flex justify-content-between align-items-center">
+                <h5 class="mb-0 fw-semibold">
+                    <i class="bi bi-list-task me-2"></i>My Active Tasks
+                </h5>
+                <span class="badge bg-light text-dark">{{ tasks|length }} tasks</span>
+            </div>
+        </div>
+        
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="bg-light">
+                        <tr>
+                            <th class="ps-4 py-3">Task</th>
+                            <th class="py-3">Project</th>
+                            <th class="py-3">Role</th>
+                            <th class="py-3">Deadline</th>
+                            <th class="py-3">Progress</th>
+                            <th class="py-3 text-center">Status</th>
+                            <th class="py-3 text-center">Notification</th>
+                            <th class="pe-4 py-3 text-end">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for task in tasks %}
+                        <tr>
+                            <td class="ps-4">
+                                <div class="d-flex align-items-center">
+                                    <i class="bi bi-check2-square text-primary me-2"></i>
+                                    <span class="fw-medium">{{ task.title }}</span>
+                                </div>
+                            </td>
+                            <td>{{ task.project.title }}</td>
+                            <td>
+                                <span class="badge bg-info bg-opacity-10 text-info">
+                                    {{ task.role }}
+                                </span>
+                            </td>
+                            <td>
+                                <div class="d-flex flex-column">
+                                    <span class="{% if task.is_overdue %}text-danger fw-medium{% endif %}">
+                                        {{ task.deadline|dateformat }}
+                                    </span>
+                                    <small class="text-muted">{{ task.deadline|timeuntil }} left</small>
+                                </div>
+                            </td>
+                            <td style="width: 150px;">
+                                <div class="d-flex align-items-center">
+                                    <div class="progress flex-grow-1 me-2" style="height: 6px;">
+                                        <div class="progress-bar bg-{% if task.progress >= 75 %}success{% elif task.progress >= 40 %}primary{% else %}warning{% endif %}" 
+                                             style="width: {{ task.progress }}%"></div>
+                                    </div>
+                                    <span class="small fw-medium">{{ task.progress }}%</span>
+                                </div>
+                            </td>
+                            <td class="text-center">
+                                <span class="badge bg-{% if task.status == 'Completed' %}success{% elif task.status == 'In Progress' %}primary{% else %}secondary{% endif %}">
+                                    {{ task.status }}
+                                </span>
+                            </td>
+                            <td class="text-center">
+                                <!-- Email Notification Icon Component -->
+                                <span class="email-notification-icon {% if task.notification_sent %}text-primary{% else %}text-muted{% endif %} d-inline-flex align-items-center position-relative"
+                                      {% if not task.notification_sent %}
+                                      data-bs-toggle="tooltip"
+                                      data-bs-placement="left"
+                                      title="Click to send notification"
+                                      style="cursor: pointer;"
+                                      {% else %}
+                                      data-bs-toggle="tooltip"
+                                      data-bs-placement="left"
+                                      title="Notification sent {{ task.notification_time|datetimeformat }}"
+                                      {% endif %}>
+                                    
+                                    <i class="bi bi-envelope{% if task.notification_sent %}-fill{% endif %} fs-5"></i>
+                                    
+                                    {% if task.notification_sent %}
+                                    <span class="position-absolute top-0 start-100 translate-middle p-1 bg-success border border-light rounded-circle">
+                                        <span class="visually-hidden">Sent</span>
+                                    </span>
+                                    {% elif task.is_overdue %}
+                                    <span class="position-absolute top-0 start-100 translate-middle p-1 bg-danger border border-light rounded-circle">
+                                        <span class="visually-hidden">Overdue</span>
+                                    </span>
+                                    <span class="position-absolute top-0 start-0 translate-middle badge rounded-pill bg-danger" style="font-size: 0.6rem;">
+                                        !
+                                    </span>
+                                    {% else %}
+                                    <span class="position-absolute top-0 start-100 translate-middle p-1 bg-warning border border-light rounded-circle">
+                                        <span class="visually-hidden">Pending</span>
+                                    </span>
+                                    {% endif %}
+                                </span>
+                            </td>
+                            <td class="pe-4 text-end">
+                                <button class="btn btn-sm btn-outline-primary" onclick="updateProgress({{ task.id }})">
+                                    <i class="bi bi-arrow-up-circle me-1"></i>Update
+                                </button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Email Notification CSS -->
+<style>
+    .email-notification-icon {
+        transition: all 0.2s ease;
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .email-notification-icon.text-muted:hover {
+        background-color: rgba(var(--bs-primary-rgb), 0.1);
+        color: var(--bs-primary) !important;
+    }
+    
+    .email-notification-icon.text-primary:hover {
+        background-color: rgba(var(--bs-primary-rgb), 0.1);
+    }
+    
+    @keyframes pulse-warning {
+        0% { box-shadow: 0 0 0 0 rgba(255, 193, 7, 0.4); }
+        70% { box-shadow: 0 0 0 6px rgba(255, 193, 7, 0); }
+        100% { box-shadow: 0 0 0 0 rgba(255, 193, 7, 0); }
+    }
+    
+    .bg-warning.border-light {
+        animation: pulse-warning 2s infinite;
+    }
+    
+    @keyframes pulse-danger {
+        0% { box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.4); }
+        70% { box-shadow: 0 0 0 6px rgba(220, 53, 69, 0); }
+        100% { box-shadow: 0 0 0 0 rgba(220, 53, 69, 0); }
+    }
+    
+    .bg-danger.border-light {
+        animation: pulse-danger 1.5s infinite;
+    }
+</style>
+
+<!-- Email Notification JavaScript -->
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize tooltips
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+        var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl);
+        });
+        
+        // Make pending notification icons clickable
+        document.querySelectorAll('.email-notification-icon.text-muted[data-bs-toggle="tooltip"]').forEach(function(icon) {
+            icon.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                // Simulate sending notification
+                this.classList.remove('text-muted');
+                this.classList.add('text-primary');
+                
+                // Change icon to filled
+                const iconElement = this.querySelector('i');
+                iconElement.classList.remove('bi-envelope');
+                iconElement.classList.add('bi-envelope-fill');
+                
+                // Update status indicator
+                const statusDot = this.querySelector('.position-absolute.translate-middle:not(.badge)');
+                if (statusDot) {
+                    statusDot.classList.remove('bg-warning');
+                    statusDot.classList.add('bg-success');
+                }
+                
+                // Remove urgent badge if exists
+                const urgentBadge = this.querySelector('.badge.bg-danger');
+                if (urgentBadge) {
+                    urgentBadge.remove();
+                }
+                
+                // Update tooltip
+                this.setAttribute('title', 'Notification sent just now');
+                
+                // Show toast notification
+                const toast = document.createElement('div');
+                toast.className = 'position-fixed bottom-0 end-0 p-3';
+                toast.style.zIndex = '9999';
+                toast.innerHTML = `
+                    <div class="toast show" role="alert" aria-live="assertive" aria-atomic="true">
+                        <div class="toast-header bg-success text-white">
+                            <i class="bi bi-check-circle-fill me-2"></i>
+                            <strong class="me-auto">Notification Sent</strong>
+                            <small>just now</small>
+                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast"></button>
+                        </div>
+                        <div class="toast-body">
+                            Email notification has been sent to the assignee.
+                        </div>
+                    </div>
+                `;
+                document.body.appendChild(toast);
+                
+                // Remove toast after 3 seconds
+                setTimeout(function() {
+                    toast.remove();
+                }, 3000);
+                
+                // Update Bootstrap tooltip
+                var tooltip = bootstrap.Tooltip.getInstance(this);
+                if (tooltip) {
+                    tooltip.dispose();
+                }
+                new bootstrap.Tooltip(this);
+            });
+        });
+    });
+    
+    function updateProgress(taskId) {
+        // Your existing update progress function
+        console.log('Update progress for task:', taskId);
+    }
+</script>
+{% endblock %}

@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Support Sphere - Project Management Platform</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 1200px;
+            width: 100%;
+            padding: 60px;
+            text-align: center;
+        }
+
+        h1 {
+            color: #667eea;
+            font-size: 3em;
+            margin-bottom: 20px;
+            font-weight: 700;
+        }
+
+        .subtitle {
+            color: #666;
+            font-size: 1.3em;
+            margin-bottom: 40px;
+        }
+
+        .features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 30px;
+            margin: 50px 0;
+        }
+
+        .feature-card {
+            background: #f8f9fa;
+            padding: 30px;
+            border-radius: 15px;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+        }
+
+        .feature-icon {
+            font-size: 3em;
+            margin-bottom: 15px;
+        }
+
+        .feature-title {
+            color: #333;
+            font-size: 1.3em;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+
+        .feature-desc {
+            color: #666;
+            line-height: 1.6;
+        }
+
+        .cta-buttons {
+            margin-top: 40px;
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 15px 40px;
+            font-size: 1.1em;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            transition: all 0.3s;
+            font-weight: 600;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: scale(1.05);
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: white;
+            color: #667eea;
+            border: 2px solid #667eea;
+        }
+
+        .btn-secondary:hover {
+            background: #667eea;
+            color: white;
+        }
+
+        .status-badge {
+            display: inline-block;
+            background: #10b981;
+            color: white;
+            padding: 8px 20px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            margin-bottom: 30px;
+            font-weight: 600;
+        }
+
+        .tech-stack {
+            margin-top: 50px;
+            padding-top: 40px;
+            border-top: 2px solid #e5e7eb;
+        }
+
+        .tech-title {
+            color: #333;
+            font-size: 1.5em;
+            margin-bottom: 20px;
+            font-weight: 600;
+        }
+
+        .tech-badges {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .tech-badge {
+            background: #667eea;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 10px;
+            font-size: 0.95em;
+            font-weight: 500;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 30px;
+            }
+
+            h1 {
+                font-size: 2em;
+            }
+
+            .subtitle {
+                font-size: 1.1em;
+            }
+
+            .features {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="status-badge">🚀 Microservices Architecture</div>
+        
+        <h1>Support Sphere</h1>
+        <p class="subtitle">Enterprise Project Management Platform</p>
+
+        <div class="features">
+            <div class="feature-card">
+                <div class="feature-icon">👥</div>
+                <div class="feature-title">Team Collaboration</div>
+                <div class="feature-desc">Real-time chat, task assignments, and seamless team coordination</div>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-icon">📊</div>
+                <div class="feature-title">Project Tracking</div>
+                <div class="feature-desc">Monitor progress, milestones, and deliverables in real-time</div>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-icon">🔔</div>
+                <div class="feature-title">Smart Notifications</div>
+                <div class="feature-desc">Email alerts for important updates and deadline reminders</div>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-icon">🎯</div>
+                <div class="feature-title">Role-Based Access</div>
+                <div class="feature-desc">Manager, Team Member, and Customer dashboards</div>
+            </div>
+        </div>
+
+        <div class="cta-buttons">
+            <a href="/api/auth/login" class="btn btn-primary">Access Application</a>
+            <a href="/api/help" class="btn btn-secondary">Documentation</a>
+        </div>
+
+        <div class="tech-stack">
+            <div class="tech-title">Technology Stack</div>
+            <div class="tech-badges">
+                <span class="tech-badge">Flask</span>
+                <span class="tech-badge">Python</span>
+                <span class="tech-badge">SQLAlchemy</span>
+                <span class="tech-badge">Docker</span>
+                <span class="tech-badge">Kubernetes</span>
+                <span class="tech-badge">Nginx</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Check backend connectivity
+        fetch('/api/')
+            .then(response => {
+                console.log('✅ Backend connection successful');
+            })
+            .catch(error => {
+                console.warn('⚠️ Backend connection failed:', error);
+            });
+    </script>
+</body>
+</html>

@@ -1,0 +1,185 @@
+{% extends "base.html" %}
+
+{% block title %}Create New Project - SupportSphere{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white border-bottom py-4">
+                    <div class="d-flex align-items-center">
+                        <div class="bg-primary bg-opacity-10 p-3 rounded-circle me-3">
+                            <i class="bi bi-kanban fs-4 text-primary"></i>
+                        </div>
+                        <div>
+                            <h4 class="mb-1 fw-bold">Start a New Project</h4>
+                            <p class="text-muted mb-0">Tell us about your project requirements</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card-body p-4">
+                    <form method="POST" action="{{ url_for('customer.new_project') }}">
+                        <!-- Project Title -->
+                        <div class="mb-4">
+                            <label class="form-label fw-medium">Project Title <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light">
+                                    <i class="bi bi-pencil-square text-muted"></i>
+                                </span>
+                                <input type="text" class="form-control" name="title" 
+                                       placeholder="e.g., E-commerce Website Development" required>
+                            </div>
+                            <div class="form-text">Choose a clear, descriptive title for your project.</div>
+                        </div>
+                        
+                        <!-- Description -->
+                        <div class="mb-4">
+                            <label class="form-label fw-medium">Project Description <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light">
+                                    <i class="bi bi-file-text text-muted"></i>
+                                </span>
+                                <textarea class="form-control" name="description" rows="5" 
+                                          placeholder="Describe your project requirements, goals, and any specific details..." required></textarea>
+                            </div>
+                            <div class="form-text">Provide detailed information to help us understand your needs.</div>
+                        </div>
+                        
+                        <!-- Complexity & Deadline Row -->
+                        <div class="row mb-4">
+                            <div class="col-md-6">
+                                <label class="form-label fw-medium">Complexity Level <span class="text-danger">*</span></label>
+                                <select class="form-select" name="complexity" required>
+                                    <option value="" disabled selected>Select complexity</option>
+                                    <option value="Low">
+                                        <span class="badge bg-success">Low</span> - Basic features, simple implementation
+                                    </option>
+                                    <option value="Medium">
+                                        <span class="badge bg-warning">Medium</span> - Standard features, moderate complexity
+                                    </option>
+                                    <option value="High">
+                                        <span class="badge bg-danger">High</span> - Advanced features, complex integration
+                                    </option>
+                                </select>
+                                <div class="form-text">Affects timeline and resource allocation.</div>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <label class="form-label fw-medium">Target Deadline <span class="text-danger">*</span></label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light">
+                                        <i class="bi bi-calendar text-muted"></i>
+                                    </span>
+                                    <input type="date" class="form-control" name="deadline" 
+                                           min="{{ now().strftime('%Y-%m-%d') }}" required>
+                                </div>
+                                <div class="form-text">Select your preferred completion date.</div>
+                            </div>
+                        </div>
+                        
+                        <!-- Additional Options -->
+                        <div class="mb-4">
+                            <label class="form-label fw-medium">Budget Range (Optional)</label>
+                            <select class="form-select" name="budget_range">
+                                <option value="" selected>Select budget range</option>
+                                <option value="<5k">Less than $5,000</option>
+                                <option value="5k-10k">$5,000 - $10,000</option>
+                                <option value="10k-25k">$10,000 - $25,000</option>
+                                <option value="25k-50k">$25,000 - $50,000</option>
+                                <option value=">50k">$50,000+</option>
+                            </select>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="nda_required" id="ndaCheck">
+                                <label class="form-check-label" for="ndaCheck">
+                                    <strong>NDA Required</strong> - I need to sign a Non-Disclosure Agreement
+                                </label>
+                            </div>
+                            <div class="form-check mt-2">
+                                <input class="form-check-input" type="checkbox" name="consultation" id="consultCheck">
+                                <label class="form-check-label" for="consultCheck">
+                                    <strong>Request Consultation</strong> - Schedule a discovery call with our team
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <!-- Attachments (Placeholder) -->
+                        <div class="mb-4 p-4 bg-light rounded">
+                            <div class="d-flex align-items-center mb-3">
+                                <i class="bi bi-paperclip fs-5 text-muted me-2"></i>
+                                <h6 class="mb-0 fw-medium">Attachments (Optional)</h6>
+                            </div>
+                            <div class="border-2 border-dashed rounded p-4 text-center">
+                                <i class="bi bi-cloud-upload fs-2 text-muted mb-2"></i>
+                                <p class="mb-1">Drag and drop files here or <a href="#" class="text-primary">browse</a></p>
+                                <small class="text-muted">Upload requirements documents, mockups, or references</small>
+                            </div>
+                        </div>
+                        
+                        <hr class="my-4">
+                        
+                        <!-- Submit Buttons -->
+                        <div class="d-flex justify-content-end gap-3">
+                            <a href="{{ url_for('dashboard') }}" class="btn btn-outline-secondary px-4">
+                                <i class="bi bi-x-lg me-2"></i>Cancel
+                            </a>
+                            <button type="submit" class="btn btn-primary px-5">
+                                <i class="bi bi-check-circle me-2"></i>Submit Project
+                            </button>
+                        </div>
+                        
+                        <div class="mt-3 text-center">
+                            <small class="text-muted">
+                                <i class="bi bi-info-circle me-1"></i>
+                                By submitting, you agree to our Terms of Service and Privacy Policy.
+                            </small>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+            <!-- Quick Info Card -->
+            <div class="card border-0 bg-light mt-4">
+                <div class="card-body p-4">
+                    <div class="row align-items-center">
+                        <div class="col-md-8">
+                            <h6 class="fw-bold mb-2">
+                                <i class="bi bi-question-circle text-primary me-2"></i>
+                                What happens after submission?
+                            </h6>
+                            <p class="text-muted small mb-0">
+                                Your project will be reviewed by our project managers. You'll receive a confirmation email
+                                and can track progress through your dashboard. Average response time: 2-4 hours.
+                            </p>
+                        </div>
+                        <div class="col-md-4 text-md-end mt-3 mt-md-0">
+                            <span class="badge bg-primary bg-opacity-10 text-primary p-3">
+                                <i class="bi bi-clock me-1"></i>24/7 Support
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .border-dashed {
+        border: 2px dashed #dee2e6 !important;
+    }
+    .border-dashed:hover {
+        border-color: var(--bs-primary) !important;
+        background-color: rgba(var(--bs-primary-rgb), 0.02);
+        cursor: pointer;
+    }
+    .form-control:focus, .form-select:focus {
+        border-color: var(--bs-primary);
+        box-shadow: 0 0 0 0.2rem rgba(var(--bs-primary-rgb), 0.1);
+    }
+</style>
+{% endblock %}

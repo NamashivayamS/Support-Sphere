@@ -1,0 +1,81 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend-deployment
+  labels:
+    app: support-sphere
+    tier: backend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: support-sphere
+      tier: backend
+  template:
+    metadata:
+      labels:
+        app: support-sphere
+        tier: backend
+    spec:
+      containers:
+      - name: backend
+        image: <your-dockerhub-username>/support-backend:v1
+        ports:
+        - containerPort: 5000
+          name: http
+        env:
+        - name: FLASK_APP
+          value: "app.py"
+        - name: FLASK_ENV
+          value: "production"
+        - name: SECRET_KEY
+          value: "supportsphere-project-key-v2"
+        - name: SQLALCHEMY_DATABASE_URI
+          value: "sqlite:///instance/project_management.db"
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "250m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 5000
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 5000
+          initialDelaySeconds: 10
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 3
+        volumeMounts:
+        - name: backend-storage
+          mountPath: /app/instance
+      volumes:
+      - name: backend-storage
+        emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: backend-service
+  labels:
+    app: support-sphere
+    tier: backend
+spec:
+  type: ClusterIP
+  selector:
+    app: support-sphere
+    tier: backend
+  ports:
+  - port: 5000
+    targetPort: 5000
+    protocol: TCP
+    name: http

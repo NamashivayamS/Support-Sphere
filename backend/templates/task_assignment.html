@@ -1,0 +1,230 @@
+{% extends "base.html" %}
+
+{% block title %}Task Assignment - SupportSphere{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row">
+        <div class="col-lg-8 mx-auto">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white border-bottom py-3">
+                    <div class="d-flex align-items-center">
+                        <div class="bg-success bg-opacity-10 p-3 rounded-circle me-3">
+                            <i class="bi bi-check2-square fs-4 text-success"></i>
+                        </div>
+                        <div>
+                            <h4 class="mb-1 fw-bold">Task Assignment</h4>
+                            <p class="text-muted mb-0">E-commerce Website Development - Project #124</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card-body p-4">
+                    <form>
+                        <!-- Team Member Selection -->
+                        <div class="mb-4">
+                            <label class="form-label fw-medium">Assign to Team Member</label>
+                            <div class="row g-2">
+                                {% for member in team_members %}
+                                <div class="col-md-6">
+                                    <div class="form-check custom-option">
+                                        <input class="form-check-input" type="radio" name="team_member" 
+                                               id="member{{ member.id }}" value="{{ member.id }}">
+                                        <label class="form-check-label d-flex align-items-center p-3 border rounded w-100" 
+                                               for="member{{ member.id }}">
+                                            <img src="https://ui-avatars.com/api/?name={{ member.name }}&background=0d6efd&color=fff" 
+                                                 class="avatar-sm me-3 rounded-circle">
+                                            <div>
+                                                <h6 class="mb-0">{{ member.name }}</h6>
+                                                <small class="text-muted">{{ member.role }}</small>
+                                            </div>
+                                            <span class="badge bg-{{ 'success' if member.available else 'secondary' }} ms-auto">
+                                                {{ 'Available' if member.available else 'Busy' }}
+                                            </span>
+                                        </label>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        
+                        <!-- Task Role -->
+                        <div class="row mb-4">
+                            <div class="col-md-6">
+                                <label class="form-label fw-medium">Task Role</label>
+                                <select class="form-select" required>
+                                    <option value="" disabled selected>Select specialization</option>
+                                    <option value="frontend">Frontend Development</option>
+                                    <option value="backend">Backend Development</option>
+                                    <option value="database">Database Design</option>
+                                    <option value="integration">API Integration</option>
+                                    <option value="devops">DevOps & Deployment</option>
+                                    <option value="testing">Quality Assurance</option>
+                                </select>
+                                <div class="form-text">Select the primary role for this task.</div>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <label class="form-label fw-medium">Task Priority</label>
+                                <select class="form-select">
+                                    <option value="low">Low - Nice to have</option>
+                                    <option value="medium" selected>Medium - Important</option>
+                                    <option value="high">High - Critical</option>
+                                    <option value="urgent">Urgent - Immediate</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <!-- Task Details -->
+                        <div class="mb-4">
+                            <label class="form-label fw-medium">Task Title</label>
+                            <input type="text" class="form-control" placeholder="e.g., Implement user authentication">
+                        </div>
+                        
+                        <div class="mb-4">
+                            <label class="form-label fw-medium">Task Description</label>
+                            <textarea class="form-control" rows="4" 
+                                      placeholder="Provide detailed requirements, acceptance criteria, and any technical specifications..."></textarea>
+                        </div>
+                        
+                        <!-- Deadline & Progress -->
+                        <div class="row mb-4">
+                            <div class="col-md-6">
+                                <label class="form-label fw-medium">Task Deadline</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light">
+                                        <i class="bi bi-calendar"></i>
+                                    </span>
+                                    <input type="date" class="form-control" min="{{ now().strftime('%Y-%m-%d') }}">
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <label class="form-label fw-medium">Initial Progress %</label>
+                                <div class="input-group">
+                                    <input type="number" class="form-control" min="0" max="100" value="0">
+                                    <span class="input-group-text bg-light">%</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Estimated Hours -->
+                        <div class="mb-4">
+                            <label class="form-label fw-medium">Estimated Hours</label>
+                            <div class="row g-2">
+                                <div class="col-md-4">
+                                    <input type="number" class="form-control" placeholder="Hours">
+                                </div>
+                                <div class="col-md-8">
+                                    <select class="form-select">
+                                        <option>Complexity S (1-4 hours)</option>
+                                        <option>Complexity M (4-8 hours)</option>
+                                        <option>Complexity L (8-16 hours)</option>
+                                        <option>Complexity XL (16-32 hours)</option>
+                                        <option>Complexity XXL (32+ hours)</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Dependencies -->
+                        <div class="mb-4">
+                            <label class="form-label fw-medium">Task Dependencies</label>
+                            <select class="form-select" multiple size="2">
+                                <option value="1">#101 - Setup project repository</option>
+                                <option value="2">#102 - Install dependencies</option>
+                                <option value="3">#103 - Database schema</option>
+                            </select>
+                            <div class="form-text">Select tasks that must be completed before this one.</div>
+                        </div>
+                        
+                        <!-- Additional Options -->
+                        <div class="mb-4">
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="checkbox" id="isMilestone">
+                                <label class="form-check-label" for="isMilestone">
+                                    <strong>Mark as Milestone</strong> - This task is a project milestone
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="sendNotification">
+                                <label class="form-check-label" for="sendNotification">
+                                    <strong>Send notification</strong> - Email assignee immediately
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <hr class="my-4">
+                        
+                        <!-- Action Buttons -->
+                        <div class="d-flex justify-content-end gap-3">
+                            <button type="button" class="btn btn-outline-secondary px-4" data-bs-dismiss="modal">
+                                <i class="bi bi-x-lg me-2"></i>Cancel
+                            </button>
+                            <button type="submit" class="btn btn-success px-5">
+                                <i class="bi bi-check2-circle me-2"></i>Assign Task
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+            <!-- Quick Assignment Card -->
+            <div class="card border-0 bg-light mt-4">
+                <div class="card-body p-4">
+                    <div class="row align-items-center">
+                        <div class="col">
+                            <h6 class="fw-bold mb-2">
+                                <i class="bi bi-lightning-charge text-primary me-2"></i>
+                                Quick Assignment
+                            </h6>
+                            <p class="text-muted small mb-0">
+                                Use AI-powered assignment to automatically match tasks with the best-suited team member
+                                based on skills, workload, and past performance.
+                            </p>
+                        </div>
+                        <div class="col-auto">
+                            <button class="btn btn-outline-primary">
+                                <i class="bi bi-robot me-2"></i>Smart Assign
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .custom-option .form-check-input {
+        position: absolute;
+        opacity: 0;
+        width: 100%;
+        height: 100%;
+        cursor: pointer;
+    }
+    
+    .custom-option .form-check-input:checked + .form-check-label {
+        border-color: var(--bs-primary) !important;
+        background-color: rgba(var(--bs-primary-rgb), 0.05);
+        box-shadow: 0 0 0 2px rgba(var(--bs-primary-rgb), 0.1);
+    }
+    
+    .custom-option .form-check-label {
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+    
+    .custom-option .form-check-label:hover {
+        background-color: #f8f9fa;
+        border-color: #adb5bd !important;
+    }
+    
+    .avatar-sm {
+        width: 48px;
+        height: 48px;
+        border-radius: 50%;
+        object-fit: cover;
+    }
+</style>
+{% endblock %}
